@@ -1,0 +1,9 @@
+%% -*- erlang -*-
+{application, dinerl,
+ [{description, "dinerl"},
+  {vsn, "0.1"},
+  {modules, []},
+  {registered, []},
+  {mod, {'dinerl_app', []}},
+  {env, []},
+  {applications, [kernel, stdlib, crypto, inets, ssl, xmerl, timer]}]}.
