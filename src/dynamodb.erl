@@ -70,5 +70,7 @@ submit(Endpoint, Headers, Body, Timeout) ->
         {ok, {{500, Code}, _Headers, ErrorString}} ->
             {error, Code, ErrorString};
         {error, Reason} ->
-            {error, unknown, Reason}
+            {error, unknown, Reason};
+        Other ->
+            {error, response, Other}
     end.
