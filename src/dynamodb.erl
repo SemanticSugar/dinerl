@@ -46,6 +46,12 @@ submit(Endpoint, Headers, Body, Timeout) ->
     case lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, [{max_connections, 5000}]) of
         {ok, {{200, _}, _Headers, Response}} ->
             {ok, Response};
+        {ok, {{400, Code}, _Headers, ErrorString}} ->
+            {error, Code, ErrorString};
+        {ok, {{413, Code}, _Headers, ErrorString}} ->
+            {error, Code, ErrorString};
+        {ok, {{500, Code}, _Headers, ErrorString}} ->
+            {error, Code, ErrorString};
         {error, Reason} ->
-            {error, Reason}
+            {error, unknown, Reason}
     end.

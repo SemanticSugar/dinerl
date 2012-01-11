@@ -10,9 +10,16 @@
  
 setup(AccessKeyId, SecretAccessKey, Zone) ->
     ets:new(?DINERL_DATA, [named_table, public]),
-    update_data(AccessKeyId, SecretAccessKey, Zone),
-    timer:apply_interval(1000, ?MODULE, update_data, [AccessKeyId, SecretAccessKey, Zone]).
+    R = update_data(AccessKeyId, SecretAccessKey, Zone),
+    timer:apply_interval(1000, ?MODULE, update_data, [AccessKeyId, SecretAccessKey, Zone]),
+    R.
 
+%%
+%% update_data/3 updates the arguments cache for the client.
+%% 
+%% Every second it updates the Date part of the arguments
+%% When within 120 seconds of the expiration of the token instead it refreshes also the token
+%%
 update_data(AccessKeyId, SecretAccessKey, Zone) ->
     case catch(ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2)) of
         {'EXIT', {badarg, _}} ->
@@ -52,7 +59,8 @@ update_data(AccessKeyId, SecretAccessKey, Zone) ->
             NewArgs = [CurrentApiAccessKeyId, CurrentApiSecretAccessKey, Zone, CurrentApiToken, NewDate, CurrentExpirationSeconds]
     end,
     
-    ets:insert(?DINERL_DATA, {?ARGS_KEY, NewArgs}).
+    ets:insert(?DINERL_DATA, {?ARGS_KEY, NewArgs}),
+    {ok, NewArgs}.
 
 api(Name, Body) ->
     api(Name, Body, undefined).
@@ -60,33 +68,8 @@ api(Name, Body) ->
 api(Name, Body, Timeout) ->
     case catch(ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2)) of
         {'EXIT', {badarg, _}} ->
-            {error, missing_credentials};
+            {error, missing_credentials, ""};
         [ApiAccessKeyId, ApiSecretAccessKey, Zone, ApiToken, Date, _] ->
             dinerl_client:api(ApiAccessKeyId, ApiSecretAccessKey, Zone, ApiToken, Date, Name, Body, Timeout)
     end.
 
-
-
-%%     NowSeconds = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
-%%     Seconds = ExpirationSeconds-NowSeconds, % Assumption is that expiration is in the future.
-    
-
-
-%%     timer:apply_after((Seconds-120)*1000, , update_token, [AccessKeyId, SecretAccessKey, Zone]).
-
-
-
-
-%% update_data() ->
-
-
-%%     ets:insert(?DINERL_DATA, {date, httpd_util:rfc1123_date()}).
-
-%% update_token(AccessKeyId, SecretAccessKey) ->
-%%     NewToken = iam:get_session_token(AccessKeyId, SecretAccessKey),
-%%     ets:insert(?DINERL_DATA, {token, NewToken}),
-%%     ExpirationString = proplists:get_value(expiration, NewToken),
-%%     NowSeconds = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
-%%     ExpirationSeconds = calendar:datetime_to_gregorian_seconds(iso8601:parse(ExpirationString)),
-%%     Seconds = ExpirationSeconds-NowSeconds, % Assumption is that expiration is in the future.
-%%     timer:apply_after((Seconds-120)*1000, dinerl, update_token, [AccessKeyId, SecretAccessKey]).
