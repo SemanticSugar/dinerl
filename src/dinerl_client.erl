@@ -3,30 +3,43 @@
 
 -export([api/7, api/8]).
 
+
+%%
+%% Item related operations
+%% 
 method_name(batch_get_item) ->
     "DynamoDBv20110924.BatchGetItem";
-method_name(create_table) ->
-    "DynamoDBv20110924.CreateTable";
-method_name(delete_item) ->
-    "DynamoDBv20110924.DeleteItem";
-method_name(delete_table) ->
-    "DynamoDBv20110924.DeleteTable";
-method_name(describe_table) ->
-    "DynamoDBv20110924.DescribeTable";
 method_name(get_item) ->
     "DynamoDBv20110924.GetItem";
-method_name(list_tables) ->
-    "DynamoDBv20110924.ListTables";
 method_name(put_item) ->
     "DynamoDBv20110924.PutItem";
+method_name(delete_item) ->
+    "DynamoDBv20110924.DeleteItem";
+method_name(update_item) ->
+    "DynamoDBv20110924.UpdateItem";
+
+%%
+%% Table related operations
+%%
+method_name(create_table) ->
+    "DynamoDBv20110924.CreateTable";
+method_name(list_tables) ->
+    "DynamoDBv20110924.ListTables";
+method_name(describe_table) ->
+    "DynamoDBv20110924.DescribeTable";
+method_name(update_table) ->
+    "DynamoDBv20110924.UpdateTable";
+method_name(delete_table) ->
+    "DynamoDBv20110924.DeleteTable";
+
+%%
+%% query interface
+%%
 method_name(q) ->
     "DynamoDBv20110924.Query";
 method_name(scan) ->
-    "DynamoDBv20110924.Scan";
-method_name(update_item) ->
-    "DynamoDBv20110924.UpdateItem";
-method_name(update_table) ->
-    "DynamoDBv20110924.UpdateTable".
+    "DynamoDBv20110924.Scan".
+
 
 
 api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body) ->
