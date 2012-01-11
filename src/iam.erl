@@ -5,7 +5,9 @@
 
 -include_lib("xmerl/include/xmerl.hrl").
 
-
+%% returns
+%% Result -> [pair()]
+%% pair() -> [{token, binary}|{secret_access_key, binary}|{access_key_id, binary}|{expiration, binary}]
 get_session_token(AccessKeyId, SecretAccessKey) ->
     Url = token_url(AccessKeyId, SecretAccessKey, "GetSessionToken"),
     case fetch_and_return_url(Url) of

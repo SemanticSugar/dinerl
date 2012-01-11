@@ -1,7 +1,7 @@
 -module(dynamodb).
 -author('Valentino Volonghi <valentino@adroll.com>').
 
--export([endpoint/1, signature_header/7, call/7]).
+-export([endpoint/1, signature_header/7, call/7, call/8]).
 
 
 endpoint("us-east-1" ++ _R) -> "dynamodb.us-east-1.amazonaws.com";
@@ -31,9 +31,14 @@ signature_header(AccessKeyId, SecretAccessKey, Target, Token, Date, EndPoint, Bo
 
 
 call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body) ->
+    call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, 1000).
+
+call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, undefined) ->
+    call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, 1000);
+call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, Timeout) ->
     EndPoint = endpoint(Zone),
     {ok, SHeader} = signature_header(AccessKeyId, SecretAccessKey, Target, Token, RFCDate, EndPoint, Body),
-    submit("http://" ++ EndPoint ++ "/", [{"content-type", "application/x-amz-json-1.0"}, {"x-amz-date", RFCDate}, {"x-amz-security-token", Token}, {"x-amz-target", Target}, SHeader], Body).
+    submit("http://" ++ EndPoint ++ "/", [{"content-type", "application/x-amz-json-1.0"}, {"x-amz-date", RFCDate}, {"x-amz-security-token", Token}, {"x-amz-target", Target}, SHeader], Body, Timeout).
 
 
 
