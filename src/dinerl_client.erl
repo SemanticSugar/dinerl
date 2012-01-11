@@ -43,13 +43,16 @@ method_name(scan) ->
     "DynamoDBv20110924.Scan".
 
 
--spec api(access_key_id(), secret_access_key(), zone(), token(), rfcdate(), method(), any()) -> result().
+-spec api(access_key_id(), secret_access_key(), zone(),
+          token(), rfcdate(), method(), any()) -> result().
 api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body) ->
     api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, undefined).
 
--spec api(access_key_id(), secret_access_key(), zone(), token(), rfcdate(), method(), any(), integer()) -> result().
+-spec api(access_key_id(), secret_access_key(), zone(),
+          token(), rfcdate(), method(), any(), integer()) -> result().
 api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, Timeout) ->
-    case dynamodb:call(AccessKeyId, SecretAccessKey, Zone, method_name(Name), Token, RFCDate, mochijson2:encode(Body), Timeout) of
+    case dynamodb:call(AccessKeyId, SecretAccessKey, Zone, method_name(Name),
+                       Token, RFCDate, mochijson2:encode(Body), Timeout) of
         {ok, Response} ->
             {ok, mochijson2:decode(Response)};
         {error, Code, Reason} ->

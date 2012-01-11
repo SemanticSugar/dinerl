@@ -29,20 +29,33 @@ signature_header(AccessKeyId, SecretAccessKey, Target, Token, Date, EndPoint, Bo
     StringToSign = crypto:sha(SignString),
     Signature = base64:encode_to_string(crypto:sha_mac(SecretAccessKey, StringToSign)),
     {ok,
-     {"x-amzn-authorization", ["AWS3 AWSAccessKeyId=", AccessKeyId, ",Algorithm=HmacSHA1,SignedHeaders=host;x-amz-date;x-amz-security-token;x-amz-target,Signature=", Signature]}}.
+     {"x-amzn-authorization", 
+      ["AWS3 AWSAccessKeyId=",
+       AccessKeyId,
+       ",Algorithm=HmacSHA1,SignedHeaders=host;x-amz-date;x-amz-security-token;x-amz-target,Signature=",
+       Signature]}}.
 
 
--spec call(access_key_id(), secret_access_key(), zone(), string(), token(), rfcdate(), any()) -> result().
+-spec call(access_key_id(), secret_access_key(), 
+           zone(), string(), token(), rfcdate(),
+           any()) -> result().
 call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body) ->
     call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, 1000).
 
--spec call(access_key_id(), secret_access_key(), zone(), string(), token(), rfcdate(), any(), integer()) -> result().
+-spec call(access_key_id(), secret_access_key(), 
+           zone(), string(), token(), rfcdate(),
+           any(), integer()) -> result().
 call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, undefined) ->
     call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, 1000);
 call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, Timeout) ->
     EndPoint = endpoint(Zone),
-    {ok, SHeader} = signature_header(AccessKeyId, SecretAccessKey, Target, Token, RFCDate, EndPoint, Body),
-    submit("http://" ++ EndPoint ++ "/", [{"content-type", "application/x-amz-json-1.0"}, {"x-amz-date", RFCDate}, {"x-amz-security-token", Token}, {"x-amz-target", Target}, SHeader], Body, Timeout).
+    {ok, SHeader} = signature_header(AccessKeyId, SecretAccessKey, Target,
+                                     Token, RFCDate, EndPoint, Body),
+    submit("http://" ++ EndPoint ++ "/", 
+           [{"content-type", "application/x-amz-json-1.0"},
+            {"x-amz-date", RFCDate},
+            {"x-amz-security-token", Token},
+            {"x-amz-target", Target}, SHeader], Body, Timeout).
 
 
 -spec submit(endpoint(), headers(), any(), integer()) -> result().

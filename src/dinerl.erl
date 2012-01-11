@@ -7,8 +7,6 @@
 
 -export([setup/3, api/1, api/2, api/3]).
  
-%% bench() ->
-%%     dru:benchcall(fun() -> dynamodb:call("DFDSAFFDSAFASD", "adfso90w2kjrojewqjkdkqdqkp", "DynamoDBv20110629", "adfsoij09ur21ij0weqjoiwdkmnacsmncioj-0i-023-02310i1489uifhwjkfqjkdskjdslkjdaljkdqkljqioewqowiefiojfqwe", ets:lookup_element(date, date, 2), "adsfadsfadfsfsadsadfadfs") end, 1000000).
 
 -spec setup(access_key_id(), secret_access_key(), zone()) ->
                    {ok, clientarguments()}.
@@ -33,7 +31,8 @@ api(Name, Body, Timeout) ->
         {'EXIT', {badarg, _}} ->
             {error, missing_credentials, ""};
         {ApiAccessKeyId, ApiSecretAccessKey, Zone, ApiToken, Date, _} ->
-            dinerl_client:api(ApiAccessKeyId, ApiSecretAccessKey, Zone, ApiToken, Date, Name, Body, Timeout)
+            dinerl_client:api(ApiAccessKeyId, ApiSecretAccessKey, Zone,
+                              ApiToken, Date, Name, Body, Timeout)
     end.
 
 
@@ -83,7 +82,8 @@ update_data(AccessKeyId, SecretAccessKey, Zone) ->
             NewArgs = {ApiAccessKeyId, ApiSecretAccessKey, Zone, ApiToken, NewDate, ExpirationSeconds};
 
         false ->
-            NewArgs = {CurrentApiAccessKeyId, CurrentApiSecretAccessKey, Zone, CurrentApiToken, NewDate, CurrentExpirationSeconds}
+            NewArgs = {CurrentApiAccessKeyId, CurrentApiSecretAccessKey,
+                       Zone, CurrentApiToken, NewDate, CurrentExpirationSeconds}
     end,
     
     ets:insert(?DINERL_DATA, {?ARGS_KEY, NewArgs}),
