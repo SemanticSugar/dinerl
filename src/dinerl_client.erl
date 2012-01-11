@@ -1,12 +1,14 @@
 -module(dinerl_client).
 -author('Valentino Volonghi <valentino@adroll.com>').
 
--export([api/7, api/8]).
+-include("dinerl_types.hrl").
 
+-export([api/7, api/8]).
 
 %%
 %% Item related operations
 %% 
+-spec method_name(method()) -> string().
 method_name(batch_get_item) ->
     "DynamoDBv20110924.BatchGetItem";
 method_name(get_item) ->
@@ -41,9 +43,11 @@ method_name(scan) ->
     "DynamoDBv20110924.Scan".
 
 
-
+-spec api(access_key_id(), secret_access_key(), zone(), token(), rfcdate(), method(), any()) -> result().
 api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body) ->
     api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, undefined).
+
+-spec api(access_key_id(), secret_access_key(), zone(), token(), rfcdate(), method(), any(), integer()) -> result().
 api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, Timeout) ->
     case dynamodb:call(AccessKeyId, SecretAccessKey, Zone, method_name(Name), Token, RFCDate, mochijson2:encode(Body), Timeout) of
         {ok, Response} ->

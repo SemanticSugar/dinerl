@@ -3,6 +3,7 @@
 -type zone() :: string().
 -type token() :: string().
 -type rfcdate() :: string().
+-type endpoint() :: string().
 
 -type clientarguments() :: {access_key_id(), secret_access_key(), zone(), token(), rfcdate(), integer()}.
 
@@ -11,3 +12,6 @@
                   update_table | delete_table | q | scan.
 
 -type result() :: {ok, any()} | {error, string(), string()} | {error, term(), string()}.
+
+-type header() :: {string() | atom(), string()}.
+-type headers() :: [header()].
