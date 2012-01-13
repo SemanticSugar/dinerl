@@ -6,7 +6,14 @@
 -include("dinerl_types.hrl").
 
 -export([setup/3, api/1, api/2, api/3]).
- 
+
+-export([create_table/4, create_table/5, delete_table/1, delete_table/2]).
+-export([describe_table/1, describe_table/2, update_table/3, update_table/4]).
+-export([list_tables/0, list_tables/1, list_tables/2, put_item/3, put_item/4]).
+-export([delete_item/3, delete_item/4, get_item/3, get_item/4]).
+-export([update_item/3, update_item/4]).
+
+-export([update_data/3]).
 
 -spec setup(access_key_id(), secret_access_key(), zone()) ->
                    {ok, clientarguments()}.
@@ -34,6 +41,143 @@ api(Name, Body, Timeout) ->
             dinerl_client:api(ApiAccessKeyId, ApiSecretAccessKey, Zone,
                               ApiToken, Date, Name, Body, Timeout)
     end.
+
+
+-spec create_table(string()|binary(), keyschema(), integer(), integer()) -> jsonf().
+create_table(Name, Key, ReadsPerSecond, WritesPerSecond) ->
+    create_table(Name, Key, ReadsPerSecond, WritesPerSecond, undefined).
+
+-spec create_table(string()|binary(), keyschema(), integer(), integer(), integer()) -> jsonf().
+create_table(Name, Key, ReadsPerSecond, WritesPerSecond, Timeout) ->
+    api(create_table,
+        [{<<"TableName">>, Name},
+         {<<"KeySchema">>, Key},
+         {<<"ProvisionedThroughput">>, [{<<"ReadsPerSecond">>, ReadsPerSecond},
+                                        {<<"WritesPerSecond">>, WritesPerSecond}]}], Timeout).
+
+delete_table(Name) ->
+    describe_table(Name, undefined).
+delete_table(Name, Timeout) ->
+    api(delete_table, [{<<"TableName">>, Name}], Timeout).
+
+
+describe_table(Name) ->
+    describe_table(Name, undefined).
+describe_table(Name, Timeout) ->
+    api(describe_table, [{<<"TableName">>, Name}], Timeout).
+
+
+
+update_table(Name, ReadsPerSecond, WritesPerSecond) ->
+    update_table(Name, ReadsPerSecond, WritesPerSecond, undefined).
+update_table(Name, ReadsPerSecond, WritesPerSecond, Timeout) ->
+    api(update_table, [{<<"TableName">>, Name},
+                       {<<"ProvisionedThroughput">>, [{<<"ReadsPerSecond">>, ReadsPerSecond},
+                                                      {<<"WritesPerSecond">>, WritesPerSecond}]}],
+        Timeout).
+
+
+list_tables() ->
+    list_tables([]).
+
+list_tables(List) ->
+    list_tables(List, undefined).
+list_tables(List, Timeout) ->
+    list_tables(List, [], Timeout).
+
+list_tables([], [], Timeout) ->
+    list_tables([], {}, Timeout);
+list_tables([], Body, Timeout) ->
+    api(list_tables, Body, Timeout);
+list_tables([{start_name, Name}|Rest], Acc, Timeout) ->
+    list_tables(Rest, [{<<"ExclusiveStartTableName">>, Name}|Acc], Timeout);
+list_tables([{limit, N}|Rest], Acc, Timeout) ->
+    list_tables(Rest, [{<<"Limit">>, N}|Acc], Timeout).
+
+
+put_item(Table, Attributes, Options) ->
+    put_item(Table, Attributes, Options, undefined).
+put_item(Table, Attributes, Options, Timeout) ->
+    put_item(Table, Attributes, Options, [], Timeout).
+
+put_item(Table, Attributes, [], PartialBody, Timeout) ->
+    api(put_item, [{<<"TableName">>, Table}, {<<"Item">>, Attributes}|PartialBody], Timeout);
+put_item(T, A, [{return, all_old}|Rest], Acc, Timeout) ->
+    put_item(T, A, Rest, [{<<"ReturnValues">>, ?ALL_OLD}|Acc], Timeout);
+put_item(T, A, [{return, none}|Rest], Acc, Timeout) ->
+    put_item(T, A, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
+put_item(T, A, [{expected, V}|Rest], Acc, Timeout) ->
+    put_item(T, A, Rest, [{<<"Expected">>, expected(V)}|Acc], Timeout).
+
+
+
+
+delete_item(Table, Key, Options) ->
+    delete_item(Table, Key, Options, undefined).
+delete_item(Table, Key, Options, Timeout) ->
+    delete_item(Table, Key, Options, [], Timeout).
+
+delete_item(Table, Key, [], PartialBody, Timeout) ->
+    api(delete_item, [{<<"TableName">>, Table}, {<<"Key">>, Key}|PartialBody], Timeout);
+delete_item(T, K, [{return, all_old}|Rest], Acc, Timeout) ->
+    delete_item(T, K, Rest, [{<<"ReturnValues">>, ?ALL_OLD}|Acc], Timeout);
+delete_item(T, K, [{return, none}|Rest], Acc, Timeout) ->
+    delete_item(T, K, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
+delete_item(T, K, [{expected, V}|Rest], Acc, Timeout) ->
+    delete_item(T, K, Rest, [{<<"Expected">>, expected(V)}|Acc], Timeout).
+
+
+
+
+get_item(Table, Key, Options) ->
+    get_item(Table, Key, Options, undefined).
+get_item(Table, Key, Options, Timeout) ->
+    get_item(Table, Key, Options, [], Timeout).
+
+get_item(T, K, [], Acc, Timeout) ->
+    api(get_item, [{<<"TableName">>, T}, {<<"Key">>, K}|Acc], Timeout);
+get_item(T, K, [{consistent, V}|Rest], Acc, Timeout) ->
+    get_item(T, K, Rest, [{<<"ConsistentRead">>, V}|Acc], Timeout);
+get_item(T, K, [{attrs, V}|Rest], Acc, Timeout) ->
+    get_item(T, K, Rest, [{<<"AttributesToGet">>, V}|Acc], Timeout).
+
+
+
+
+update_item(Table, Key, Options) ->
+    update_item(Table, Key, Options, undefined).
+update_item(Table, Key, Options, Timeout) ->
+    update_item(Table, Key, Options, [], Timeout).
+
+update_item(T, K, [], Acc, Timeout) ->
+    api(update_item, [{<<"TableName">>, T}, {<<"Key">>, K}|Acc], Timeout);
+update_item(T, K, [{update, AttributeUpdates}|Rest], Acc, Timeout) ->
+    update_item(T, K, Rest, [{<<"AttributeUpdates">>, attr_updates(AttributeUpdates, [])}|Acc], Timeout);
+update_item(T, K, [{expected, V}|Rest], Acc, Timeout) ->
+    update_item(T, K, Rest, [{<<"Expected">>, expected(V)}|Acc], Timeout);
+update_item(T, K, [{return, none}|Rest], Acc, Timeout) ->
+    update_item(T, K, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
+update_item(T, K, [{return, all_old}|Rest], Acc, Timeout) ->
+    update_item(T, K, Rest, [{<<"ReturnValues">>, ?ALL_OLD}|Acc], Timeout);
+update_item(T, K, [{return, updated_old}|Rest], Acc, Timeout) ->
+    update_item(T, K, Rest, [{<<"ReturnValues">>, ?UPDATED_OLD}|Acc], Timeout);
+update_item(T, K, [{return, all_new}|Rest], Acc, Timeout) ->
+    update_item(T, K, Rest, [{<<"ReturnValues">>, ?ALL_NEW}|Acc], Timeout);
+update_item(T, K, [{return, updated_new}|Rest], Acc, Timeout) ->
+    update_item(T, K, Rest, [{<<"ReturnValues">>, ?UPDATED_NEW}|Acc], Timeout).
+
+
+
+
+scan() ->
+    pass.
+q() ->
+    pass.
+
+
+
+
+
 
 
 
@@ -88,3 +232,24 @@ update_data(AccessKeyId, SecretAccessKey, Zone) ->
     
     ets:insert(?DINERL_DATA, {?ARGS_KEY, NewArgs}),
     {ok, NewArgs}.
+
+
+expected({Name, Opts}) ->
+    {Name, value_and_action(Opts, [])}.
+
+attr_updates([], Acc) ->
+    Acc;
+attr_updates([{Name, Opts}|Rest], Acc) ->
+    attr_updates(Rest, [{Name, value_and_action(Opts, [])}|Acc]).
+
+value_and_action([], Acc) -> Acc;
+value_and_action([{value, V}|Rest], Acc) ->
+    value_and_action(Rest, [{<<"Value">>, V}|Acc]);
+value_and_action([{action, put}|Rest], Acc) ->
+    value_and_action(Rest, [{<<"Action">>, <<"PUT">>}|Acc]);
+value_and_action([{action, delete}|Rest], Acc) ->
+    value_and_action(Rest, [{<<"Action">>, <<"DELETE">>}|Acc]);
+value_and_action([{action, add}|Rest], Acc) ->
+    value_and_action(Rest, [{<<"Action">>, <<"ADD">>}|Acc]);
+value_and_action([{exists, V}|Rest], Acc) ->
+    value_and_action(Rest, [{<<"Exists">>, V}|Acc]).
