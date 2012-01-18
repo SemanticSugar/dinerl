@@ -107,7 +107,7 @@ put_item(T, A, [{return, all_old}|Rest], Acc, Timeout) ->
 put_item(T, A, [{return, none}|Rest], Acc, Timeout) ->
     put_item(T, A, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
 put_item(T, A, [{expected, V}|Rest], Acc, Timeout) ->
-    put_item(T, A, Rest, [{<<"Expected">>, expected(V)}|Acc], Timeout).
+    put_item(T, A, Rest, [{<<"Expected">>, expected(V, [])}|Acc], Timeout).
 
 
 
@@ -124,7 +124,7 @@ delete_item(T, K, [{return, all_old}|Rest], Acc, Timeout) ->
 delete_item(T, K, [{return, none}|Rest], Acc, Timeout) ->
     delete_item(T, K, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
 delete_item(T, K, [{expected, V}|Rest], Acc, Timeout) ->
-    delete_item(T, K, Rest, [{<<"Expected">>, expected(V)}|Acc], Timeout).
+    delete_item(T, K, Rest, [{<<"Expected">>, expected(V, [])}|Acc], Timeout).
 
 
 
@@ -154,7 +154,7 @@ update_item(T, K, [], Acc, Timeout) ->
 update_item(T, K, [{update, AttributeUpdates}|Rest], Acc, Timeout) ->
     update_item(T, K, Rest, [{<<"AttributeUpdates">>, attr_updates(AttributeUpdates, [])}|Acc], Timeout);
 update_item(T, K, [{expected, V}|Rest], Acc, Timeout) ->
-    update_item(T, K, Rest, [{<<"Expected">>, expected(V)}|Acc], Timeout);
+    update_item(T, K, Rest, [{<<"Expected">>, expected(V, [])}|Acc], Timeout);
 update_item(T, K, [{return, none}|Rest], Acc, Timeout) ->
     update_item(T, K, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
 update_item(T, K, [{return, all_old}|Rest], Acc, Timeout) ->
@@ -234,22 +234,26 @@ update_data(AccessKeyId, SecretAccessKey, Zone) ->
     {ok, NewArgs}.
 
 
-expected({Name, Opts}) ->
-    {Name, value_and_action(Opts, [])}.
+expected([], Acc) ->
+    Acc;
+expected([{Option, Value}|Rest], Acc) ->
+    expected(Rest, [value_and_action({Option, Value})|Acc]).
+
 
 attr_updates([], Acc) ->
     Acc;
-attr_updates([{Name, Opts}|Rest], Acc) ->
-    attr_updates(Rest, [{Name, value_and_action(Opts, [])}|Acc]).
+attr_updates([{AttrName, Opts}|Rest], Acc) ->
+    attr_updates(Rest, [{AttrName, expected(Opts, [])}|Acc]).
 
-value_and_action([], Acc) -> Acc;
-value_and_action([{value, V}|Rest], Acc) ->
-    value_and_action(Rest, [{<<"Value">>, V}|Acc]);
-value_and_action([{action, put}|Rest], Acc) ->
-    value_and_action(Rest, [{<<"Action">>, <<"PUT">>}|Acc]);
-value_and_action([{action, delete}|Rest], Acc) ->
-    value_and_action(Rest, [{<<"Action">>, <<"DELETE">>}|Acc]);
-value_and_action([{action, add}|Rest], Acc) ->
-    value_and_action(Rest, [{<<"Action">>, <<"ADD">>}|Acc]);
-value_and_action([{exists, V}|Rest], Acc) ->
-    value_and_action(Rest, [{<<"Exists">>, V}|Acc]).
+
+
+value_and_action({value, V}) ->
+    {<<"Value">>, V};
+value_and_action({action, put}) ->
+    {<<"Action">>, <<"PUT">>};
+value_and_action({action, add}) ->
+    {<<"Action">>, <<"ADD">>};
+value_and_action({action, delete}) ->
+    {<<"Action">>, <<"DELETE">>};
+value_and_action({exists, V}) ->
+    {<<"Exists">>, V}.

@@ -60,8 +60,10 @@ call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, Timeout) 
 
 -spec submit(endpoint(), headers(), any(), integer()) -> result().
 submit(Endpoint, Headers, Body, Timeout) ->
+    io:format("Request:~nHeaders:~p~nBody:~n~p~n~n", [Headers, iolist_to_binary(Body)]),
     case lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, [{max_connections, 5000}]) of
         {ok, {{200, _}, _Headers, Response}} ->
+            io:format("Response: ~p~n", [Response]),
             {ok, Response};
         {ok, {{400, Code}, _Headers, ErrorString}} ->
             {error, Code, ErrorString};
