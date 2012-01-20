@@ -6,7 +6,6 @@ Here's how you use this thing without using any macro help:
     dinerl:put_item(<<"TestTable">>, [{<<"Key">>, [{<<"S">>, <<"jello">>}]}], []).
     dinerl:get_item(<<"TestTable">>, [{<<"HashKeyElement">>, [{<<"S">>, <<"jello">>}]}], []).
 
-
     put(Key, Value, TTL, Now) ->
         dinerl:put_item(<<"Attributions">>, [{<<"UserKey">>, [{<<"S">>, Key}]},
                                              {<<"Updated">>, [{<<"N">>, list_to_binary(integer_to_list(Now))}]},
@@ -14,7 +13,7 @@ Here's how you use this thing without using any macro help:
                                              {<<"Value">>, [{<<"S">>, Value}]}], []).
 
     get(Key, Now, Default) ->
-        case dinerl:get_item(<<"Attributions">>, [{<<"HashKeyElement">>, [{<<"S">>, Key}]}], [{attrs, [<<"TTL">>, <<"Updated">>, <<"Value">>]}]) of
+        case dinerl:get_item(<<"Attributions">>, [{<<"HashKeyElement">>, [{<<"S">>, Key}]}], [{attrs, [<<"TTL">>, <<"Updated">>, <<"Value">>, <<"Visited">>]}]) of
             {ok, Element} ->
                 ParsedResult = parsejson(Element),
                 return_if_not_expired(Key, ParsedResult, Now, Default);
@@ -24,16 +23,26 @@ Here's how you use this thing without using any macro help:
                 Default
         end.
 
+    add(Key, Value, TTL, Now) ->
+        dinerl:update_item(<<"Attributions">>,
+                           [{<<"HashKeyElement">>, [{<<"S">>, Key}]}],
+                           [{update, [{<<"Visited">>, [{value, [{<<"SS">>, [Value]}]},
+                                                       {action, add}]},
+                                      {<<"Updated">>, [{value, [{<<"N">>, list_to_binary(integer_to_list(Now))}]},
+                                                       {action, put}]},
+                                      {<<"TTL">>, [{value, [{<<"N">>, list_to_binary(integer_to_list(TTL))}]},
+                                                   {action, put}]}]}]).
 
+
+
+    parsejson([]) ->
+        [];
     parsejson({struct, L}) ->
-        parsejson(L, []).
-
-    parsejson([], Acc) ->
-        Acc;
-    parsejson([{<<"Item">>, {struct, Fields}}|Rest], Acc) ->
-        parsejsonfields(Fields, Acc);
-    parsejson([H|T], Acc) ->
-        parsejson(T, Acc).
+        parsejson(L);
+    parsejson([{<<"Item">>, {struct, Fields}}|_Rest]) ->
+        parsejsonfields(Fields, []);
+    parsejson([_H|T]) ->
+        parsejson(T).
 
     parsejsonfields([], Acc) ->
         Acc;
@@ -42,9 +51,9 @@ Here's how you use this thing without using any macro help:
     parsejsonfields([{Name, {struct, [{<<"S">>, Value}]}}|Rest], Acc) ->
         parsejsonfields(Rest, [{Name, Value}|Acc]);
     parsejsonfields([{Name, {struct, [{<<"NS">>, Value}]}}|Rest], Acc) ->
-        parsejsonfields(Rest, Acc);
+        parsejsonfields(Rest, [{Name, all_to_int(Value)}|Acc]);
     parsejsonfields([{Name, {struct, [{<<"SS">>, Value}]}}|Rest], Acc) ->
-        parsejsonfields(Rest, Acc).    
+        parsejsonfields(Rest, [{Name, Value}|Acc]).
 
 
     return_if_not_expired(_, [], _, Default) ->
@@ -59,6 +68,13 @@ Here's how you use this thing without using any macro help:
                 dinerl:delete_item(<<"Attributions">>, [{<<"HashKeyElement">>, [{<<"S">>, Key}]}], []),
                 Default
         end.
+
+    all_to_int(L) ->
+        all_to_int(L, []).
+    all_to_int([], Acc) ->
+        lists:reverse(Acc);
+    all_to_int([H|T], Acc) ->
+        all_to_int(T, [list_to_integer(binary_to_list(H))|Acc]).
 
     pytime() ->
         pytime(erlang:now()).
