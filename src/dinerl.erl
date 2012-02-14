@@ -176,14 +176,6 @@ q() ->
 
 
 
-
-
-
-
-
-
-
-
 %% Internal
 %%
 %% Every second it updates the Date part of the arguments

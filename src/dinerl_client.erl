@@ -52,9 +52,9 @@ api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body) ->
           token(), rfcdate(), method(), any(), integer()) -> result().
 api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, Timeout) ->
     case dynamodb:call(AccessKeyId, SecretAccessKey, Zone, method_name(Name),
-                       Token, RFCDate, mochijson2:encode(Body), Timeout) of
+                       Token, RFCDate, dmochijson2:encode(Body), Timeout) of
         {ok, Response} ->
-            {ok, mochijson2:decode(Response)};
+            {ok, dmochijson2:decode(Response)};
         {error, Code, Reason} ->
             {error, Code, Reason}
     end.
