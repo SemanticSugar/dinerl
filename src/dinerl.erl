@@ -107,7 +107,7 @@ put_item(T, A, [{return, all_old}|Rest], Acc, Timeout) ->
 put_item(T, A, [{return, none}|Rest], Acc, Timeout) ->
     put_item(T, A, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
 put_item(T, A, [{expected, V}|Rest], Acc, Timeout) ->
-    put_item(T, A, Rest, [{<<"Expected">>, expected(V, [])}|Acc], Timeout).
+    put_item(T, A, Rest, [{<<"Expected">>, attr_updates(V, [])}|Acc], Timeout).
 
 
 
@@ -124,7 +124,7 @@ delete_item(T, K, [{return, all_old}|Rest], Acc, Timeout) ->
 delete_item(T, K, [{return, none}|Rest], Acc, Timeout) ->
     delete_item(T, K, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
 delete_item(T, K, [{expected, V}|Rest], Acc, Timeout) ->
-    delete_item(T, K, Rest, [{<<"Expected">>, expected(V, [])}|Acc], Timeout).
+    delete_item(T, K, Rest, [{<<"Expected">>, attr_updates(V, [])}|Acc], Timeout).
 
 
 
@@ -154,7 +154,7 @@ update_item(T, K, [], Acc, Timeout) ->
 update_item(T, K, [{update, AttributeUpdates}|Rest], Acc, Timeout) ->
     update_item(T, K, Rest, [{<<"AttributeUpdates">>, attr_updates(AttributeUpdates, [])}|Acc], Timeout);
 update_item(T, K, [{expected, V}|Rest], Acc, Timeout) ->
-    update_item(T, K, Rest, [{<<"Expected">>, expected(V, [])}|Acc], Timeout);
+    update_item(T, K, Rest, [{<<"Expected">>, attr_updates(V, [])}|Acc], Timeout);
 update_item(T, K, [{return, none}|Rest], Acc, Timeout) ->
     update_item(T, K, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
 update_item(T, K, [{return, all_old}|Rest], Acc, Timeout) ->
