@@ -3,11 +3,11 @@
 
 -include("dinerl_types.hrl").
 
--export([api/7, api/8]).
+-export([api/7, api/8, api/9]).
 
 %%
 %% Item related operations
-%% 
+%%
 -spec method_name(method()) -> string().
 method_name(batch_get_item) ->
     "DynamoDBv20110924.BatchGetItem";
@@ -46,13 +46,18 @@ method_name(scan) ->
 -spec api(access_key_id(), secret_access_key(), zone(),
           token(), rfcdate(), method(), any()) -> result().
 api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body) ->
-    api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, undefined).
+    api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, undefined, []).
 
 -spec api(access_key_id(), secret_access_key(), zone(),
           token(), rfcdate(), method(), any(), integer()) -> result().
 api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, Timeout) ->
+    api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, Timeout, []).
+
+-spec api(access_key_id(), secret_access_key(), zone(),
+          token(), rfcdate(), method(), any(), integer(), options()) -> result().
+api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, Timeout, Options) ->
     case dynamodb:call(AccessKeyId, SecretAccessKey, Zone, method_name(Name),
-                       Token, RFCDate, dmochijson2:encode(Body), Timeout) of
+                       Token, RFCDate, dmochijson2:encode(Body), Timeout, Options) of
         {ok, Response} ->
             {ok, dmochijson2:decode(Response)};
         {error, Code, Reason} ->

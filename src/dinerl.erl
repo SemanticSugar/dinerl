@@ -5,7 +5,7 @@
 
 -include("dinerl_types.hrl").
 
--export([setup/3, api/1, api/2, api/3]).
+-export([setup/3, setup/4, api/1, api/2, api/3]).
 
 -export([create_table/4, create_table/5, delete_table/1, delete_table/2]).
 -export([describe_table/1, describe_table/2, update_table/3, update_table/4]).
@@ -13,14 +13,19 @@
 -export([delete_item/3, delete_item/4, get_item/3, get_item/4]).
 -export([update_item/3, update_item/4]).
 
--export([update_data/3]).
+-export([update_data/4]).
 
 -spec setup(access_key_id(), secret_access_key(), zone()) ->
                    {ok, clientarguments()}.
 setup(AccessKeyId, SecretAccessKey, Zone) ->
+    setup(AccessKeyId, SecretAccessKey, Zone, [{max_connections, 5000}]).
+
+-spec setup(access_key_id(), secret_access_key(), zone(), options()) ->
+                   {ok, clientarguments()}.
+setup(AccessKeyId, SecretAccessKey, Zone, Options) ->
     ets:new(?DINERL_DATA, [named_table, public]),
-    R = update_data(AccessKeyId, SecretAccessKey, Zone),
-    timer:apply_interval(1000, ?MODULE, update_data, [AccessKeyId, SecretAccessKey, Zone]),
+    R = update_data(AccessKeyId, SecretAccessKey, Zone, Options),
+    timer:apply_interval(1000, ?MODULE, update_data, [AccessKeyId, SecretAccessKey, Zone, Options]),
     R.
 
 
@@ -37,9 +42,9 @@ api(Name, Body, Timeout) ->
     case catch(ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2)) of
         {'EXIT', {badarg, _}} ->
             {error, missing_credentials, ""};
-        {ApiAccessKeyId, ApiSecretAccessKey, Zone, ApiToken, Date, _} ->
+        {ApiAccessKeyId, ApiSecretAccessKey, Zone, Options, ApiToken, Date, _} ->
             dinerl_client:api(ApiAccessKeyId, ApiSecretAccessKey, Zone,
-                              ApiToken, Date, Name, Body, Timeout)
+                              ApiToken, Date, Name, Body, Timeout, Options)
     end.
 
 
@@ -180,14 +185,15 @@ q() ->
 %%
 %% Every second it updates the Date part of the arguments
 %% When within 120 seconds of the expiration of the token instead it refreshes also the token
--spec update_data(access_key_id(), secret_access_key(), zone()) ->
+-spec update_data(access_key_id(), secret_access_key(), zone(), options()) ->
                          {ok, clientarguments()}.
-update_data(AccessKeyId, SecretAccessKey, Zone) ->
+update_data(AccessKeyId, SecretAccessKey, Zone, Options) ->
     case catch(ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2)) of
         {'EXIT', {badarg, _}} ->
             CurrentApiAccessKeyId = "123",
             CurrentApiSecretAccessKey = "123",
             Zone = Zone,
+            Options = Options,
             CurrentApiToken = "123",
             CurrentExpirationSeconds = calendar:datetime_to_gregorian_seconds(erlang:universaltime());
 
@@ -195,12 +201,13 @@ update_data(AccessKeyId, SecretAccessKey, Zone) ->
             {CurrentApiAccessKeyId,
              CurrentApiSecretAccessKey,
              Zone,
+             Options,
              CurrentApiToken,
              _Date,
              CurrentExpirationSeconds} = Result
 
     end,
-    
+
     NewDate = httpd_util:rfc1123_date(),
     NowSeconds = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
     SecondsToExpire = CurrentExpirationSeconds - NowSeconds,
@@ -208,20 +215,20 @@ update_data(AccessKeyId, SecretAccessKey, Zone) ->
     case SecondsToExpire < 120 of
         true ->
             NewToken = iam:get_session_token(AccessKeyId, SecretAccessKey),
-            
+
             ExpirationString = proplists:get_value(expiration, NewToken),
             ApiAccessKeyId = proplists:get_value(access_key_id, NewToken),
             ApiSecretAccessKey = proplists:get_value(secret_access_key, NewToken),
             ApiToken = proplists:get_value(token, NewToken),
             ExpirationSeconds = calendar:datetime_to_gregorian_seconds(iso8601:parse(ExpirationString)),
-            
-            NewArgs = {ApiAccessKeyId, ApiSecretAccessKey, Zone, ApiToken, NewDate, ExpirationSeconds};
+
+            NewArgs = {ApiAccessKeyId, ApiSecretAccessKey, Zone, Options, ApiToken, NewDate, ExpirationSeconds};
 
         false ->
             NewArgs = {CurrentApiAccessKeyId, CurrentApiSecretAccessKey,
-                       Zone, CurrentApiToken, NewDate, CurrentExpirationSeconds}
+                       Zone, Options, CurrentApiToken, NewDate, CurrentExpirationSeconds}
     end,
-    
+
     ets:insert(?DINERL_DATA, {?ARGS_KEY, NewArgs}),
     {ok, NewArgs}.
 

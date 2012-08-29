@@ -3,7 +3,7 @@
 
 -include("dinerl_types.hrl").
 
--export([endpoint/1, signature_header/7, call/7, call/8]).
+-export([endpoint/1, signature_header/7, call/7, call/8, call/9]).
 
 
 -spec endpoint(zone()) -> endpoint().
@@ -18,8 +18,8 @@ endpoint("eu-west-1" ++ _R) -> "dynamodb.eu-west-1.amazonaws.com".
 
 signature_header(AccessKeyId, SecretAccessKey, Target, Token, Date, EndPoint, Body) ->
     SignString = ["POST", $\n,
-                  "/", $\n, 
-                  $\n, 
+                  "/", $\n,
+                  $\n,
                   "host:", EndPoint, $\n,
                   "x-amz-date:", Date, $\n,
                   "x-amz-security-token:", Token, $\n,
@@ -29,39 +29,45 @@ signature_header(AccessKeyId, SecretAccessKey, Target, Token, Date, EndPoint, Bo
     StringToSign = crypto:sha(SignString),
     Signature = base64:encode_to_string(crypto:sha_mac(SecretAccessKey, StringToSign)),
     {ok,
-     {"x-amzn-authorization", 
+     {"x-amzn-authorization",
       ["AWS3 AWSAccessKeyId=",
        AccessKeyId,
        ",Algorithm=HmacSHA1,SignedHeaders=host;x-amz-date;x-amz-security-token;x-amz-target,Signature=",
        Signature]}}.
 
 
--spec call(access_key_id(), secret_access_key(), 
+-spec call(access_key_id(), secret_access_key(),
            zone(), string(), token(), rfcdate(),
            any()) -> result().
 call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body) ->
-    call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, 1000).
+    call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, 1000, []).
 
--spec call(access_key_id(), secret_access_key(), 
+-spec call(access_key_id(), secret_access_key(),
            zone(), string(), token(), rfcdate(),
            any(), integer()) -> result().
 call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, undefined) ->
-    call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, 1000);
-call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, Timeout) ->
+    call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, 1000, []).
+
+-spec call(access_key_id(), secret_access_key(),
+           zone(), string(), token(), rfcdate(),
+           any(), integer(), options()) -> result().
+call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, undefined, Options) ->
+    call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, 1000, Options);
+call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, Timeout, Options) ->
     EndPoint = endpoint(Zone),
     {ok, SHeader} = signature_header(AccessKeyId, SecretAccessKey, Target,
                                      Token, RFCDate, EndPoint, Body),
-    submit("http://" ++ EndPoint ++ "/", 
+    submit("http://" ++ EndPoint ++ "/",
            [{"content-type", "application/x-amz-json-1.0"},
             {"x-amz-date", RFCDate},
             {"x-amz-security-token", Token},
-            {"x-amz-target", Target}, SHeader], Body, Timeout).
+            {"x-amz-target", Target}, SHeader], Body, Timeout, Options).
 
 
--spec submit(endpoint(), headers(), any(), integer()) -> result().
-submit(Endpoint, Headers, Body, Timeout) ->
+-spec submit(endpoint(), headers(), any(), integer(), options()) -> result().
+submit(Endpoint, Headers, Body, Timeout, Options) ->
     %io:format("Request:~nHeaders:~p~nBody:~n~p~n~n", [Headers, iolist_to_binary(Body)]),
-    case lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, [{max_connections, 5000}]) of
+    case lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, Options) of
         {ok, {{200, _}, _Headers, Response}} ->
             %io:format("Response: ~p~n", [Response]),
             {ok, Response};

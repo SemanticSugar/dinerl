@@ -1,6 +1,7 @@
 -type access_key_id() :: string().
 -type secret_access_key() :: string().
 -type zone() :: string().
+-type options() :: list().
 -type token() :: string().
 -type rfcdate() :: string().
 -type endpoint() :: string().
@@ -15,7 +16,7 @@
 
 -type jsonf() :: any().
 
--type clientarguments() :: {access_key_id(), secret_access_key(), zone(), token(), rfcdate(), integer()}.
+-type clientarguments() :: {access_key_id(), secret_access_key(), zone(), options(), token(), rfcdate(), integer()}.
 
 -type method() :: batch_get_item | get_item | put_item | delete_item |
                   update_item | create_table | list_tables | describe_table |
