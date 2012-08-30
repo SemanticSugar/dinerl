@@ -21,12 +21,17 @@ setup(AccessKeyId, SecretAccessKey, Zone) ->
     setup(AccessKeyId, SecretAccessKey, Zone, [{max_connections, 5000}]).
 
 -spec setup(access_key_id(), secret_access_key(), zone(), options()) ->
-                   {ok, clientarguments()}.
+                   {ok, clientarguments()} | {error, any()}.
 setup(AccessKeyId, SecretAccessKey, Zone, Options) ->
     ets:new(?DINERL_DATA, [named_table, public]),
-    R = update_data(AccessKeyId, SecretAccessKey, Zone, Options),
-    timer:apply_interval(1000, ?MODULE, update_data, [AccessKeyId, SecretAccessKey, Zone, Options]),
-    R.
+    case update_data(AccessKeyId, SecretAccessKey, Zone, Options) of
+        {ok, ClientArgs} ->
+            case timer:apply_interval(1000, ?MODULE, update_data, [AccessKeyId, SecretAccessKey, Zone, Options]) of
+                {ok, _TRef} -> {ok, ClientArgs};
+                Error -> Error
+            end;
+        Error -> Error
+    end.
 
 
 -spec api(method()) ->result().
