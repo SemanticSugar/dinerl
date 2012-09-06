@@ -11,6 +11,7 @@
 -export([describe_table/1, describe_table/2, update_table/3, update_table/4]).
 -export([list_tables/0, list_tables/1, list_tables/2, put_item/3, put_item/4]).
 -export([delete_item/3, delete_item/4, get_item/3, get_item/4]).
+-export([get_items/1, get_items/2, get_items/3, get_items/4]).
 -export([update_item/3, update_item/4]).
 
 -export([update_data/3]).
@@ -140,6 +141,24 @@ get_item(T, K, [{consistent, V}|Rest], Acc, Timeout) ->
     get_item(T, K, Rest, [{<<"ConsistentRead">>, V}|Acc], Timeout);
 get_item(T, K, [{attrs, V}|Rest], Acc, Timeout) ->
     get_item(T, K, Rest, [{<<"AttributesToGet">>, V}|Acc], Timeout).
+
+
+
+
+get_items(Table, Keys, Options) ->
+    do_get_items([{Table, Keys, Options}], [], undefined).
+get_items(Table, Keys, Options, Timeout) ->
+    do_get_items([{Table, Keys, Options}], [], Timeout).
+get_items(MultiTableQuery) ->
+    do_get_items(MultiTableQuery, [], undefined).
+get_items(MultiTableQuery, Timeout) ->
+    do_get_items(MultiTableQuery, [], Timeout).
+
+do_get_items([], Acc, Timeout) ->
+    api(batch_get_item, [{<<"RequestItems">>, Acc}], Timeout);
+do_get_items([{Table, Keys, Options}|Rest], Acc, Timeout) ->
+    Attrs = proplists:get_value(attrs, Options, []),
+    do_get_items(Rest, [{Table, [{<<"Keys">>, Keys}, {<<"AttributesToGet">>, Attrs}]}|Acc], Timeout).
 
 
 
