@@ -8,3 +8,5 @@
 /deps
 *.swp
 *.pyc
+.idea
+*.iml
