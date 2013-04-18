@@ -13,6 +13,7 @@
 -export([delete_item/3, delete_item/4, get_item/3, get_item/4]).
 -export([get_items/1, get_items/2, get_items/3, get_items/4]).
 -export([update_item/3, update_item/4]).
+-export([query_item/3, query_item/4]).
 
 -export([update_data/3]).
 
@@ -190,8 +191,40 @@ update_item(T, K, [{return, updated_new}|Rest], Acc, Timeout) ->
 
 scan() ->
     pass.
-q() ->
-    pass.
+
+
+%% query_item options:
+%% limit: int, max number of results
+%% count: bool, only return the total count
+%% scan_index_forward: bool, set to false to reverse the sort order
+%% consistent: bool, make a consistent read, default false
+%% exclusive_start_key: output from LastEvaluatedKey when limit(size or limit param) is reached
+%% attrs: array( binary ), [<<"a">>,<<"b">>], only return these attributes
+%% range_condition: {array( attributes), operation }
+%% eg, dinerl:query_item(<<"table">>,[{<<"S">>, <<"hash_value">>}], [{range_condition, { [[{<<"S">>, <<"range_value">>}]]  ,<<"EQ">> }}]).
+
+query_item(Table, Key, Options) ->
+    query_item(Table, Key, Options, undefined).
+query_item(Table, Key, Options, Timeout) ->
+    query_item(Table, Key, Options, [], Timeout).
+
+query_item(T, K, [], Acc, Timeout) ->
+    api(query_item, [{<<"TableName">>, T}, {<<"HashKeyValue">>, K}|Acc], Timeout);
+
+query_item(T, K, [{limit, V}|Rest], Acc, Timeout) ->
+    query_item(T, K, Rest, [{<<"Limit">>, V}|Acc], Timeout);
+query_item(T, K, [{count, V}|Rest], Acc, Timeout) ->
+    query_item(T, K, Rest, [{<<"Count">>, V}|Acc], Timeout);
+query_item(T, K, [{scan_index_forward, V}|Rest], Acc, Timeout) ->
+    query_item(T, K, Rest, [{<<"ScanIndexForward">>, V}|Acc], Timeout);
+query_item(T, K, [{consistent, V}|Rest], Acc, Timeout) ->
+    query_item(T, K, Rest, [{<<"ConsistentRead">>, V}|Acc], Timeout);
+query_item(T, K, [{exclusive_start_key, V}|Rest], Acc, Timeout) ->
+    query_item(T, K, Rest, [{<<"ExclusiveStartKey">>, V}|Acc], Timeout);
+query_item(T, K, [{range_condition, { V, Op }}|Rest], Acc, Timeout) ->
+    query_item(T, K, Rest, [{<<"RangeKeyCondition">>, [{ <<"AttributeValueList">>, V }, {<<"ComparisonOperator">>, Op }]}|Acc], Timeout);
+query_item(T, K, [{attrs, V}|Rest], Acc, Timeout) ->
+    query_item(T, K, Rest, [{<<"AttributesToGet">>, V}|Acc], Timeout).
 
 
 
