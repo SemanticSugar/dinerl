@@ -10,37 +10,37 @@
 %% 
 -spec method_name(method()) -> string().
 method_name(batch_get_item) ->
-    "DynamoDBv20110924.BatchGetItem";
+    "DynamoDBv20111205.BatchGetItem";
 method_name(get_item) ->
-    "DynamoDBv20110924.GetItem";
+    "DynamoDBv20111205.GetItem";
 method_name(put_item) ->
-    "DynamoDBv20110924.PutItem";
+    "DynamoDBv20111205.PutItem";
 method_name(delete_item) ->
-    "DynamoDBv20110924.DeleteItem";
+    "DynamoDBv20111205.DeleteItem";
 method_name(update_item) ->
-    "DynamoDBv20110924.UpdateItem";
+    "DynamoDBv20111205.UpdateItem";
 
 %%
 %% Table related operations
 %%
 method_name(create_table) ->
-    "DynamoDBv20110924.CreateTable";
+    "DynamoDBv20111205.CreateTable";
 method_name(list_tables) ->
-    "DynamoDBv20110924.ListTables";
+    "DynamoDBv20111205.ListTables";
 method_name(describe_table) ->
-    "DynamoDBv20110924.DescribeTable";
+    "DynamoDBv20111205.DescribeTable";
 method_name(update_table) ->
-    "DynamoDBv20110924.UpdateTable";
+    "DynamoDBv20111205.UpdateTable";
 method_name(delete_table) ->
-    "DynamoDBv20110924.DeleteTable";
+    "DynamoDBv20111205.DeleteTable";
 
 %%
 %% query interface
 %%
 method_name(query_item) ->
-    "DynamoDBv20110924.Query";
+    "DynamoDBv20111205.Query";
 method_name(scan) ->
-    "DynamoDBv20110924.Scan".
+    "DynamoDBv20111205.Scan".
 
 
 -spec api(access_key_id(), secret_access_key(), zone(),
