@@ -28,7 +28,7 @@ setup(AccessKeyId, SecretAccessKey, Zone) ->
 
 -spec api(method()) ->result().
 api(Name) ->
-    api(Name, {struct, []}).
+    api(Name, {[]}).
 
 -spec api(method(), any()) ->result().
 api(Name, Body) ->
@@ -252,7 +252,7 @@ update_data(AccessKeyId, SecretAccessKey, Zone) ->
              CurrentExpirationSeconds} = Result
 
     end,
-    
+
     NewDate = httpd_util:rfc1123_date(),
     NowSeconds = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
     SecondsToExpire = CurrentExpirationSeconds - NowSeconds,
@@ -260,20 +260,20 @@ update_data(AccessKeyId, SecretAccessKey, Zone) ->
     case SecondsToExpire < 120 of
         true ->
             NewToken = iam:get_session_token(AccessKeyId, SecretAccessKey),
-            
+
             ExpirationString = proplists:get_value(expiration, NewToken),
             ApiAccessKeyId = proplists:get_value(access_key_id, NewToken),
             ApiSecretAccessKey = proplists:get_value(secret_access_key, NewToken),
             ApiToken = proplists:get_value(token, NewToken),
             ExpirationSeconds = calendar:datetime_to_gregorian_seconds(iso8601:parse(ExpirationString)),
-            
+
             NewArgs = {ApiAccessKeyId, ApiSecretAccessKey, Zone, ApiToken, NewDate, ExpirationSeconds};
 
         false ->
             NewArgs = {CurrentApiAccessKeyId, CurrentApiSecretAccessKey,
                        Zone, CurrentApiToken, NewDate, CurrentExpirationSeconds}
     end,
-    
+
     ets:insert(?DINERL_DATA, {?ARGS_KEY, NewArgs}),
     {ok, NewArgs}.
 

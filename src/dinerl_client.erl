@@ -7,7 +7,7 @@
 
 %%
 %% Item related operations
-%% 
+%%
 -spec method_name(method()) -> string().
 method_name(batch_get_item) ->
     "DynamoDB_20111205.BatchGetItem";
@@ -52,9 +52,9 @@ api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body) ->
           token(), rfcdate(), method(), any(), integer()) -> result().
 api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, Timeout) ->
     case dynamodb:call(AccessKeyId, SecretAccessKey, Zone, method_name(Name),
-                       Token, RFCDate, dmochijson2:encode(Body), Timeout) of
+                       Token, RFCDate, jiffy:encode(Body), Timeout) of
         {ok, Response} ->
-            {ok, dmochijson2:decode(Response)};
+            {ok, jiffy:decode(Response)};
         {error, Code, Reason} ->
             {error, Code, Reason}
     end.
