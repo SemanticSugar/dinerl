@@ -6,4 +6,4 @@
   {registered, []},
   {mod, {'dinerl_app', []}},
   {env, []},
-  {applications, [kernel, stdlib, crypto, inets, ssl, xmerl, timer]}]}.
+  {applications, [kernel, stdlib, crypto, inets, ssl, xmerl]}]}.
