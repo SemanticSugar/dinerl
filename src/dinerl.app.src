@@ -4,6 +4,5 @@
   {vsn, "0.1"},
   {modules, []},
   {registered, []},
-  {mod, {'dinerl_app', []}},
   {env, []},
-  {applications, [kernel, stdlib, crypto, inets, ssl, xmerl, timer]}]}.
+  {applications, [kernel, stdlib, crypto, inets, asn1, public_key, ssl, xmerl]}]}.
