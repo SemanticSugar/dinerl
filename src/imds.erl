@@ -13,7 +13,7 @@
 
 -define(IAM_URL, "http://169.254.169.254/latest/meta-data/iam/").
 -define(IAM_ROLES_URL, ?IAM_URL ++ "security-credentials/").
--define(MDS_TIMEOUT, 30000).
+-define(MDS_TIMEOUT, 200000).
 
 %%%% API
 
@@ -21,7 +21,7 @@
 %% @doc Obtain the current role name from the instance metadata server.
 -spec get_role_name() -> {error, term()} | {ok, string()}.
 get_role_name() ->
-    case lhttpc:request(?IAM_ROLES_URL, 'GET', [], ?MDS_TIMEOUT) of
+    case catch(lhttpc:request(?IAM_ROLES_URL, 'GET', [], ?MDS_TIMEOUT)) of
         {ok, {{200, "OK"}, Headers, Body}} ->
             case mime_type(Headers) of
                 "text/plain" ->
@@ -44,7 +44,7 @@ get_session_token() ->
         {ok, RoleName} ->
             %% fixme; urlencode the role name.
             TokenUrl = ?IAM_ROLES_URL ++ RoleName,
-            case lhttpc:request(TokenUrl, 'GET', [], ?MDS_TIMEOUT) of
+            case catch(lhttpc:request(TokenUrl, 'GET', [], ?MDS_TIMEOUT)) of
                 {ok, {{200, "OK"}, _Headers, Body}} ->
                     %% note: response type is (currently text/plain), but the body is JSON.
                     metadata_response_to_token_proplist(Body);
