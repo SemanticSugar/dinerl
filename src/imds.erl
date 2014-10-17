@@ -19,7 +19,7 @@
 
 
 %% @doc Obtain the current role name from the instance metadata server.
--spec get_role_name() -> undefined | {ok, string()}.
+-spec get_role_name() -> {error, term()} | {ok, string()}.
 get_role_name() ->
     case lhttpc:request(?IAM_ROLES_URL, 'GET', [], ?MDS_TIMEOUT) of
         {ok, {{200, "OK"}, Headers, Body}} ->
@@ -28,18 +28,17 @@ get_role_name() ->
                     %% fixme; assumes utf-8 encoding.
                     {ok, unicode:characters_to_list(Body, utf8)};
                 _ ->
-                    %% fixme; log/crash?
-                    undefined
+                    {error, unexpected_mime_type}
             end;
         _ ->
-            undefined
+            {error, bad_role_response}
     end.
 
 
 %% @doc Obtain a session token from the instance metadata server,
 %% returning a proplist containing 'expiration', 'access_key_id',
 %% 'secret_access_key', and 'token' entries.
--spec get_session_token() -> undefined | list().
+-spec get_session_token() -> {error, term()} | list().
 get_session_token() ->
     case get_role_name() of
         {ok, RoleName} ->
@@ -50,12 +49,10 @@ get_session_token() ->
                     %% note: response type is (currently text/plain), but the body is JSON.
                     metadata_response_to_token_proplist(Body);
                 _ ->
-                    %% fixme; log/crash?
-                    undefined
+                    {error, bad_token_response}
             end;
-        _ ->
-            %% fixme; log/crash?
-            undefined
+        Error ->
+            Error
     end.
 
 
@@ -82,8 +79,10 @@ metadata_response_to_token_proplist(Body) ->
                                 [],
                                 Plist);
                 _ ->
-                    undefined
-            end
+                    {error, failed_token_response}
+            end;
+        _ ->
+            {error, invalid_token_json}
     end.
 
 
