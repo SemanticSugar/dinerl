@@ -235,10 +235,10 @@ mime_type_test() ->
 metadata_response_to_proplist_test() ->
     Body = <<"{\"Code\":\"Success\",\"LastUpdated\":\"2014-10-17T15:17:07-07:00\",\"Type\":\"AWS-HMAC\",\"AccessKeyId\":\"XYZZY\",\"SecretAccessKey\":\"FLOOBLE\",\"Token\":\"BAZZLE\",\"Expiration\":\"2014-10-18T09:00:30Z\"}">>,
     Result = metadata_response_to_token_proplist(Body),
-    Expected = [{expiration, <<"2014-10-18T09:00:30Z">>},
-                {access_key_id, <<"XYZZY">>},
-                {secret_access_key, <<"FLOOBLE">>},
-                {token, <<"BAZZLE">>}],
+    Expected = [{expiration, "2014-10-18T09:00:30Z"},
+                {access_key_id, "XYZZY"},
+                {secret_access_key, "FLOOBLE"},
+                {token, "BAZZLE"}],
     [?assertEqual(proplists:get_value(Key, Expected),
                   proplists:get_value(Key, Result))
      || Key <- [expiration, access_key_id, secret_access_key, token]],
