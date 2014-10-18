@@ -16,7 +16,7 @@
 -export([update_item/3, update_item/4]).
 -export([query_item/3, query_item/4]).
 
--export([update_data/3]).
+-export([update_data/3, update_data/2]).
 
 -spec setup(access_key_id(), secret_access_key(), zone()) ->
                    {ok, clientarguments()}.
