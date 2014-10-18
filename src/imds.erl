@@ -59,7 +59,7 @@ get_session_token() ->
 imds_response(Url, MimeTypes, Timeout) ->
     AcceptHeader = {"Accept", string:join(MimeTypes, ", ")},
     RequestHeaders = [AcceptHeader | ?IMDS_HEADERS],
-    case lhttpc:request(Url, "GET", RequestHeaders, ?IMDS_TIMEOUT) of
+    case lhttpc:request(Url, "GET", RequestHeaders, Timeout) of
         {ok, {{200, _}, Headers, Body}} ->
             case lists:member(mime_type(Headers), MimeTypes) of
                 true ->
