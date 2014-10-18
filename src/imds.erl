@@ -83,8 +83,7 @@ imds_response(Url, MimeTypes, Timeout) ->
 -spec imds_response(string(), list(string()), pos_integer(), pos_integer()) ->
     {ok, term()} | {error, term()}.
 imds_response(Url, MimeTypes, Timeout, Retries) ->
-    call_with_retry(?MODULE, fun imds_response/3,
-                    [Url, MimeTypes, Timeout],
+    call_with_retry(?MODULE, imds_response, [Url, MimeTypes, Timeout],
                     "Could not obtain IMDS response: ~p~n",
                     Retries).
 
