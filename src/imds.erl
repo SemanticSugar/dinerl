@@ -144,7 +144,7 @@ metadata_response_to_token_proplist(Body) ->
                     lists:foldl(fun ({Element, Value}, Acc) ->
                                         case lists:keyfind(Element, 1, Targets) of
                                             {_, AtomName} ->
-                                                [{AtomName, Value} | Acc];
+                                                [{AtomName, binary_to_list(Value)} | Acc];
                                             _ ->
                                                 Acc
                                         end
