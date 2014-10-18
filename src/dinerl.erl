@@ -5,7 +5,8 @@
 
 -include("dinerl_types.hrl").
 
--export([setup/3, setup/1, api/1, api/2, api/3]).
+-export([setup/3, setup/1, setup/0,
+         api/1, api/2, api/3]).
 
 -export([create_table/4, create_table/5, delete_table/1, delete_table/2]).
 -export([describe_table/1, describe_table/2, update_table/3, update_table/4]).
@@ -32,6 +33,13 @@ setup(Zone) ->
         end,
     setup_(Q, Zone).
 
+-spec setup() -> {ok, clientarguments()}.
+setup() ->
+    {ok, Zone} = imds:zone(),
+    setup(Zone).
+
+
+-spec setup_(function(), string()) -> {ok, clientarguments()}.
 setup_(Q, Zone) ->
     ets:new(?DINERL_DATA, [named_table, public]),
     R = update_data(Q, Zone),
