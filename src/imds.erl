@@ -1,64 +1,138 @@
 %%% @copyright (C) 2014, AdRoll
 %%% @doc
-%%%         Helper module for obtaining access tokens from the instance
-%%%         metadata server (or hologram).
+%%%         Helper module for obtaining information from an instance
+%%%         metadata server.
 %%% @end
 %%% Created : 17 Oct 2014 by Mike Watters <mike.watters@adroll.com>
 
 -module(imds).
 
--export([get_role_name/0,
-         get_session_token/0]).
+-export([role_name/0,
+         zone/0,
+         get_session_token/0,
+         imds_response/3,
+         imds_response/4]).
 
 
--define(IAM_URL, "http://169.254.169.254/latest/meta-data/iam/").
+-define(IMDS_HOST, "169.254.169.254").
+-define(IMDS_URL, "http://" ++ ?IMDS_HOST ++ "/latest/meta-data/").
+-define(AZ_URL, ?IMDS_URL ++ "placement/availability-zone").
+-define(IAM_URL, ?IMDS_URL ++ "iam/").
 -define(IAM_ROLES_URL, ?IAM_URL ++ "security-credentials/").
--define(MDS_TIMEOUT, 200000).
+-define(IMDS_HEADERS, [{"Connection", "Close"}]).
+-define(IMDS_TIMEOUT, 30000).
+-define(IMDS_RETRIES, 3).
+
 
 %%%% API
 
-
 %% @doc Obtain the current role name from the instance metadata server.
--spec get_role_name() -> {error, term()} | {ok, string()}.
-get_role_name() ->
-    case catch(lhttpc:request(?IAM_ROLES_URL, 'GET', [], ?MDS_TIMEOUT)) of
-        {ok, {{200, "OK"}, Headers, Body}} ->
-            case mime_type(Headers) of
-                "text/plain" ->
-                    %% fixme; assumes utf-8 encoding.
-                    {ok, unicode:characters_to_list(Body, utf8)};
-                _ ->
-                    {error, unexpected_mime_type}
-            end;
-        _ ->
-            {error, bad_role_response}
-    end.
+-spec role_name() -> {error, term()} | {ok, string()}.
+role_name() ->
+    imds_text_response(?IAM_ROLES_URL).
 
+%% @doc Obtain the name of the current availability zone from the
+%% instance metadata server.
+-spec zone() -> {error, term()} | {ok, string()}.
+zone() ->
+    imds_text_response(?AZ_URL).
 
 %% @doc Obtain a session token from the instance metadata server,
 %% returning a proplist containing 'expiration', 'access_key_id',
 %% 'secret_access_key', and 'token' entries.
--spec get_session_token() -> {error, term()} | list().
+-spec get_session_token() -> {error, term()} | list(proplists:property()).
 get_session_token() ->
-    case get_role_name() of
+    case role_name() of
         {ok, RoleName} ->
             %% fixme; urlencode the role name.
             TokenUrl = ?IAM_ROLES_URL ++ RoleName,
-            case catch(lhttpc:request(TokenUrl, 'GET', [], ?MDS_TIMEOUT)) of
-                {ok, {{200, "OK"}, _Headers, Body}} ->
-                    %% note: response type is (currently text/plain), but the body is JSON.
-                    metadata_response_to_token_proplist(Body);
-                _ ->
-                    {error, bad_token_response}
+            imds_token_response(TokenUrl);
+        Error ->
+            Error
+    end.
+
+%% @doc Make a GET request to the given URL, expecting (accepting) the
+%% given mime types, and with the given request timeout in
+%% milliseconds.
+-spec imds_response(string(), list(string()), pos_integer()) ->
+    {ok, term()} | {error, term()}.
+imds_response(Url, MimeTypes, Timeout) ->
+    AcceptHeader = {"Accept", string:join(MimeTypes, ", ")},
+    RequestHeaders = [AcceptHeader | ?IMDS_HEADERS],
+    case lhttpc:request(Url, "GET", RequestHeaders, ?IMDS_TIMEOUT) of
+        {ok, {{200, _}, Headers, Body}} ->
+            case lists:member(mime_type(Headers), MimeTypes) of
+                true ->
+                    {ok, Body};
+                false ->
+                    %% the server ignored our accept header:
+                    {error, unacceptable_response}
             end;
+        {ok, {{406, _}, _, _}} ->
+            %% the server respected our accept header and could not
+            %% produce a response with any of the requested mime
+            %% types:
+            {error, unacceptable_response};
+        {ok, {{Code, Status}, _, _}} ->
+            {error, {bad_response, {Code, Status}}};
+        {error, Reason} ->
+            {error, Reason}
+    end.
+
+%% @doc As in imds_response/3, but wrapping with catch & retry.
+-spec imds_response(string(), list(string()), pos_integer(), pos_integer()) ->
+    {ok, term()} | {error, term()}.
+imds_response(Url, MimeTypes, Timeout, Retries) ->
+    call_with_retry(?MODULE, fun imds_response/3,
+                    [Url, MimeTypes, Timeout],
+                    "Could not obtain IMDS response: ~p~n",
+                    Retries).
+
+
+%%%% INTERNAL FUNCTIONS
+
+%% @doc Call the given arity-1 Transform function with the result of a
+%% successful call to imds_response/4, or return the error which
+%% resulted from that call.
+-spec imds_transform_response(string(), list(string()), function()) ->
+    {error, term()} | term().
+imds_transform_response(Url, MimeTypes, Transform) ->
+    case imds_response(Url, MimeTypes, ?IMDS_TIMEOUT, ?IMDS_RETRIES) of
+        {ok, Result} ->
+            Transform(Result);
         Error ->
             Error
     end.
 
 
+%%
+-spec imds_text_response(string()) ->
+    {ok, string()} | {error, term()}.
+imds_text_response(Url) ->
+    imds_transform_response(Url, ["text/plain"],
+                            %% fixme; assumes utf-8 encoding.
+                            fun (Result) ->
+                                    case unicode:characters_to_list(Result) of
+                                        {error, _, _} ->
+                                            {error, invalid_unicode};
+                                        {incomplete, _, _} ->
+                                            {error, invalid_unicode};
+                                        String ->
+                                            {ok, String}
+                                    end
+                            end).
 
-%%%% INTERNAL FUNCTIONS
+%%
+-spec imds_token_response(string()) ->
+    list(proplists:property()) | {error, term()}.
+imds_token_response(Url) ->
+    MimeTypes = ["text/plain", "application/json"],
+    imds_transform_response(Url, MimeTypes,
+                            fun metadata_response_to_token_proplist/1).
 
+
+%% @doc Obtain relevant values from the JSON response body, returning
+%% a proplist with atom keys and the appropriate values.
 metadata_response_to_token_proplist(Body) ->
     Targets = [{<<"Expiration">>, expiration},
                {<<"AccessKeyId">>, access_key_id},
@@ -110,6 +184,28 @@ find_header(Name, Headers) ->
         _ ->
             undefined
     end.
+
+
+
+%% @doc Call the given M:F with Args, emitting an error with the given
+%% ErrorFormat (with the error as the single format argument) and
+%% retrying otherwise.
+-spec call_with_retry(module(), function(), list(), string(), integer()) ->
+    {ok, term()} | {error, term()}.
+call_with_retry(Module, Fun, Args, ErrorFormat, Retries) ->
+    if
+        Retries > 0 ->
+            case catch(apply(Module, Fun, Args)) of
+                {ok, Result} ->
+                    {ok, Result};
+                Error ->
+                    error_logger:error_msg(ErrorFormat, [Error]),
+                    call_with_retry(Module, Fun, Args, ErrorFormat, Retries - 1)
+            end;
+        true ->
+            {error, retries_exceeded}
+    end.
+
 
 
 %%%% UNIT TESTS
