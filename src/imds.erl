@@ -9,6 +9,8 @@
 
 -export([role_name/0,
          zone/0,
+         instance_id/0,
+         public_hostname/0,
          get_session_token/0,
          imds_response/3,
          imds_response/4]).
@@ -16,6 +18,8 @@
 
 -define(IMDS_HOST, "169.254.169.254").
 -define(IMDS_URL, "http://" ++ ?IMDS_HOST ++ "/latest/meta-data/").
+-define(INSTANCE_ID_URL, ?IMDS_URL ++ "instance-id").
+-define(INSTANCE_HOSTNAME_URL, ?IMDS_URL ++ "public-hostname").
 -define(AZ_URL, ?IMDS_URL ++ "placement/availability-zone").
 -define(IAM_URL, ?IMDS_URL ++ "iam/").
 -define(IAM_ROLES_URL, ?IAM_URL ++ "security-credentials/").
@@ -36,6 +40,15 @@ role_name() ->
 -spec zone() -> {error, term()} | {ok, string()}.
 zone() ->
     imds_text_response(?AZ_URL).
+
+-spec instance_id() -> {error, term()} | {ok, string()}.
+instance_id() ->
+    imds_text_response(?INSTANCE_ID_URL).
+
+-spec public_hostname() -> {error, term()} | {ok, string()}.
+public_hostname() ->
+    imds_text_response(?INSTANCE_HOSTNAME_URL).
+
 
 %% @doc Obtain a session token from the instance metadata server,
 %% returning a proplist containing 'expiration', 'access_key_id',
