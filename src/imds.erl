@@ -72,8 +72,8 @@ get_session_token() ->
 imds_response(Url, MimeTypes, Timeout) ->
     AcceptHeader = {"Accept", string:join(MimeTypes, ", ")},
     RequestHeaders = [AcceptHeader | ?IMDS_HEADERS],
-    case lhttpc:request(Url, "GET", RequestHeaders, Timeout) of
-        {ok, {{200, _}, Headers, Body}} ->
+    case httpc:request(get, {Url, RequestHeaders}, [{timeout, Timeout}], [{body_format, binary}]) of
+        {ok, {{_, 200, _}, Headers, Body}} ->
             case lists:member(mime_type(Headers), MimeTypes) of
                 true ->
                     {ok, Body};
@@ -81,12 +81,12 @@ imds_response(Url, MimeTypes, Timeout) ->
                     %% the server ignored our accept header:
                     {error, unacceptable_response}
             end;
-        {ok, {{406, _}, _, _}} ->
+        {ok, {{_, 406, _}, _, _}} ->
             %% the server respected our accept header and could not
             %% produce a response with any of the requested mime
             %% types:
             {error, unacceptable_response};
-        {ok, {{Code, Status}, _, _}} ->
+        {ok, {{_, Code, Status}, _, _}} ->
             {error, {bad_response, {Code, Status}}};
         {error, Reason} ->
             {error, Reason}
