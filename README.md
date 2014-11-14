@@ -1,6 +1,20 @@
 Here's how you use this thing without using any macro help:
 
     dinerl:setup("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "us-east-1b").
+
+or (use a specific endpoint by specifying the zone, and obtain
+security tokens from the local instance metadata server):
+
+    dinerl:setup("us-east-1b").
+
+or (obtain security tokens from the local instance metadata server,
+and use the zone returned from the instance metadata server to
+determine the endpoint):
+
+    dinerl:setup().
+
+then:
+
     dinerl:create_table(<<"TestTable">>, [{<<"HashKeyElement">>, [{<<"AttributeName">>, <<"Key">>}, {<<"AttributeType">>, <<"S">>}]}], 50, 50).
     dinerl:list_tables().
     dinerl:put_item(<<"TestTable">>, [{<<"Key">>, [{<<"S">>, <<"jello">>}]}], []).
@@ -80,4 +94,3 @@ Here's how you use this thing without using any macro help:
         pytime(erlang:now()).
     pytime({MegaSecs, Secs, MicroSecs}) ->
         erlang:trunc((1.0e+6 * MegaSecs) + Secs + (1.0e-6 * MicroSecs)).
-
