@@ -5,7 +5,8 @@
 
 -include("dinerl_types.hrl").
 
--export([setup/3, api/1, api/2, api/3]).
+-export([setup/3, setup/1, setup/0,
+         api/1, api/2, api/3]).
 
 -export([create_table/4, create_table/5, delete_table/1, delete_table/2]).
 -export([describe_table/1, describe_table/2, update_table/3, update_table/4]).
@@ -15,14 +16,34 @@
 -export([update_item/3, update_item/4]).
 -export([query_item/3, query_item/4]).
 
--export([update_data/3]).
+-export([update_data/3, update_data/2]).
 
 -spec setup(access_key_id(), secret_access_key(), zone()) ->
                    {ok, clientarguments()}.
 setup(AccessKeyId, SecretAccessKey, Zone) ->
+    Q = fun () ->
+                iam:get_session_token(AccessKeyId, SecretAccessKey)
+        end,
+    setup_(Q, Zone).
+
+-spec setup(zone()) -> {ok, clientarguments()}.
+setup(Zone) ->
+    Q = fun () ->
+                imds:get_session_token()
+        end,
+    setup_(Q, Zone).
+
+-spec setup() -> {ok, clientarguments()}.
+setup() ->
+    {ok, Zone} = imds:zone(),
+    setup(Zone).
+
+
+-spec setup_(function(), string()) -> {ok, clientarguments()}.
+setup_(Q, Zone) ->
     ets:new(?DINERL_DATA, [named_table, public]),
-    R = update_data(AccessKeyId, SecretAccessKey, Zone),
-    timer:apply_interval(1000, ?MODULE, update_data, [AccessKeyId, SecretAccessKey, Zone]),
+    R = update_data(Q, Zone),
+    timer:apply_interval(1000, ?MODULE, update_data, [Q, Zone]),
     R.
 
 
@@ -235,6 +256,15 @@ query_item(T, K, [{attrs, V}|Rest], Acc, Timeout) ->
 -spec update_data(access_key_id(), secret_access_key(), zone()) ->
                          {ok, clientarguments()}.
 update_data(AccessKeyId, SecretAccessKey, Zone) ->
+    update_data(fun () ->
+                        iam:get_session_token(AccessKeyId, SecretAccessKey)
+                end,
+                Zone).
+
+
+-spec update_data(function(), zone()) ->
+                         {ok, clientarguments()}.
+update_data(GetToken, Zone) ->
     case catch(ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2)) of
         {'EXIT', {badarg, _}} ->
             CurrentApiAccessKeyId = "123",
@@ -252,30 +282,31 @@ update_data(AccessKeyId, SecretAccessKey, Zone) ->
              CurrentExpirationSeconds} = Result
 
     end,
-    
+
     NewDate = httpd_util:rfc1123_date(),
     NowSeconds = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
     SecondsToExpire = CurrentExpirationSeconds - NowSeconds,
 
     case SecondsToExpire < 120 of
         true ->
-            NewToken = iam:get_session_token(AccessKeyId, SecretAccessKey),
-            
+            NewToken = GetToken(),
+
             ExpirationString = proplists:get_value(expiration, NewToken),
             ApiAccessKeyId = proplists:get_value(access_key_id, NewToken),
             ApiSecretAccessKey = proplists:get_value(secret_access_key, NewToken),
             ApiToken = proplists:get_value(token, NewToken),
             ExpirationSeconds = calendar:datetime_to_gregorian_seconds(iso8601:parse(ExpirationString)),
-            
+
             NewArgs = {ApiAccessKeyId, ApiSecretAccessKey, Zone, ApiToken, NewDate, ExpirationSeconds};
 
         false ->
             NewArgs = {CurrentApiAccessKeyId, CurrentApiSecretAccessKey,
                        Zone, CurrentApiToken, NewDate, CurrentExpirationSeconds}
     end,
-    
+
     ets:insert(?DINERL_DATA, {?ARGS_KEY, NewArgs}),
     {ok, NewArgs}.
+
 
 
 expected([], Acc) ->
