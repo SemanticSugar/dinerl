@@ -18,6 +18,8 @@
 
 -export([update_data/3, update_data/2]).
 
+-export([batch_write_item/3]).
+
 -spec setup(access_key_id(), secret_access_key(), zone()) ->
                    {ok, clientarguments()}.
 setup(AccessKeyId, SecretAccessKey, Zone) ->
@@ -246,6 +248,22 @@ query_item(T, K, [{range_condition, { V, Op }}|Rest], Acc, Timeout) ->
     query_item(T, K, Rest, [{<<"RangeKeyCondition">>, [{ <<"AttributeValueList">>, V }, {<<"ComparisonOperator">>, Op }]}|Acc], Timeout);
 query_item(T, K, [{attrs, V}|Rest], Acc, Timeout) ->
     query_item(T, K, Rest, [{<<"AttributesToGet">>, V}|Acc], Timeout).
+
+
+
+batch_write_item(TableName, PutItems, DeleteKeys) ->
+    api(batch_write_item, [{<<"RequestItems">>, [
+        {TableName,
+            lists:map(fun make_batch_put/1, PutItems) ++
+            lists:map(fun make_batch_delete/1, DeleteKeys)
+        }
+    ]}]).
+
+make_batch_put(Item) ->
+    [{<<"PutRequest">>, [{<<"Item">>, Item}]}].
+
+make_batch_delete(Key) ->
+    [{<<"DeleteRequest">>, [{<<"Key">>, Key}]}].
 
 
 

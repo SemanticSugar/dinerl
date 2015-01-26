@@ -11,6 +11,8 @@
 -spec method_name(method()) -> string().
 method_name(batch_get_item) ->
     "DynamoDB_20111205.BatchGetItem";
+method_name(batch_write_item) ->
+    "DynamoDB_20120810.BatchWriteItem";
 method_name(get_item) ->
     "DynamoDB_20111205.GetItem";
 method_name(put_item) ->
