@@ -5,4 +5,4 @@
   {modules, []},
   {registered, []},
   {env, []},
-  {applications, [kernel, stdlib, crypto, inets, asn1, public_key, ssl, xmerl]}]}.
+  {applications, [kernel, stdlib, crypto, inets, asn1, public_key, ssl, xmerl, lhttpc]}]}.
