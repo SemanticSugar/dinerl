@@ -10,8 +10,8 @@
 -define(MIDNIGHT, {0,0,0}).
 -define(V, proplists:get_value).
 
--type datetime() :: tuple(calendar:date(), calendar:time()).
--type timestamp() :: tuple(integer(), integer(), integer()).
+-type datetime() :: {calendar:date(), calendar:time()}.
+-type timestamp() :: {integer(), integer(), integer()}.
 
 %% API
 
@@ -32,7 +32,7 @@ format({{Y,Mo,D}, {H,Mn,S}}) ->
     list_to_binary(IsoStr).
 
 -spec parse (string()) -> datetime().
-%% @doc Convert an ISO 8601 formatted string to a 
+%% @doc Convert an ISO 8601 formatted string to a
 parse(Bin) when is_binary(Bin) ->
     parse(binary_to_list(Bin));
 parse(Str) ->
