@@ -209,13 +209,6 @@ update_item(T, K, [{return, all_new}|Rest], Acc, Timeout) ->
 update_item(T, K, [{return, updated_new}|Rest], Acc, Timeout) ->
     update_item(T, K, Rest, [{<<"ReturnValues">>, ?UPDATED_NEW}|Acc], Timeout).
 
-
-
-
-scan() ->
-    pass.
-
-
 %% query_item options:
 %% limit: int, max number of results
 %% count: bool, only return the total count

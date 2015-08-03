@@ -12,7 +12,7 @@ add_sign(AccessKeyId, SecretAccessKey, HostUrl, Method, ArgList) ->
 
     EncodedUrlParams = urlencode(lists:keysort(1, lists:merge(UrlParams, ArgList))),
     SignString = [Method, $\n, HostUrl, $\n, Path, $\n, EncodedUrlParams],
-    Signature = base64:encode_to_string(crypto:sha_mac(SecretAccessKey, SignString)),
+    Signature = base64:encode_to_string(crypto:hmac(sha, SecretAccessKey, SignString)),
     EncodedUrlParams ++ "&Signature=" ++ quote_plus(Signature).
 
 get_timestamp(new) ->

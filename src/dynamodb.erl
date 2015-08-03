@@ -18,31 +18,31 @@ endpoint("eu-west-1" ++ _R) -> "dynamodb.eu-west-1.amazonaws.com".
 
 signature_header(AccessKeyId, SecretAccessKey, Target, Token, Date, EndPoint, Body) ->
     SignString = ["POST", $\n,
-                  "/", $\n, 
-                  $\n, 
+                  "/", $\n,
+                  $\n,
                   "host:", EndPoint, $\n,
                   "x-amz-date:", Date, $\n,
                   "x-amz-security-token:", Token, $\n,
                   "x-amz-target:", Target, $\n,
                   $\n,
                   Body],
-    StringToSign = crypto:sha(SignString),
-    Signature = base64:encode_to_string(crypto:sha_mac(SecretAccessKey, StringToSign)),
+    StringToSign = crypto:hash(sha, SignString),
+    Signature = base64:encode_to_string(crypto:hmac(sha, SecretAccessKey, StringToSign)),
     {ok,
-     {"x-amzn-authorization", 
+     {"x-amzn-authorization",
       ["AWS3 AWSAccessKeyId=",
        AccessKeyId,
        ",Algorithm=HmacSHA1,SignedHeaders=host;x-amz-date;x-amz-security-token;x-amz-target,Signature=",
        Signature]}}.
 
 
--spec call(access_key_id(), secret_access_key(), 
+-spec call(access_key_id(), secret_access_key(),
            zone(), string(), token(), rfcdate(),
            any()) -> result().
 call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body) ->
     call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, 1000).
 
--spec call(access_key_id(), secret_access_key(), 
+-spec call(access_key_id(), secret_access_key(),
            zone(), string(), token(), rfcdate(),
            any(), integer()) -> result().
 call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, undefined) ->
@@ -51,7 +51,7 @@ call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, Timeout) 
     EndPoint = endpoint(Zone),
     {ok, SHeader} = signature_header(AccessKeyId, SecretAccessKey, Target,
                                      Token, RFCDate, EndPoint, Body),
-    submit("http://" ++ EndPoint ++ "/", 
+    submit("http://" ++ EndPoint ++ "/",
            [{"content-type", "application/x-amz-json-1.0"},
             {"x-amz-date", RFCDate},
             {"x-amz-security-token", Token},
