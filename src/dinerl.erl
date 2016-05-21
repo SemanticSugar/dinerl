@@ -226,8 +226,8 @@ query_item(Table, Key, Options) ->
 query_item(Table, Key, Options, Timeout) ->
     query_item(Table, Key, Options, [], Timeout).
 
-query_item(T, K, [], Acc, Timeout) ->
-    NewParameters = [{<<"TableName">>, T}, {<<"HashKeyValue">>, K}| convert_query_parameters(Acc, [])],
+query_item(T, K, List, Acc, Timeout) ->
+    NewParameters = [{<<"TableName">>, T}, {<<"HashKeyValue">>, K}| convert_query_parameters(List, Acc)],
     api(query_item_20111205, NewParameters, Timeout).
 
 
