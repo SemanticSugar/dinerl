@@ -39,7 +39,10 @@ method_name(delete_table) ->
 %%
 %% query interface
 %%
-method_name(query_item) ->
+method_name(query_item_20120810) ->
+    "DynamoDB_20120810.Query";
+
+method_name(query_item_20111205) ->
     "DynamoDB_20111205.Query";
 method_name(scan) ->
     "DynamoDB_20111205.Scan".

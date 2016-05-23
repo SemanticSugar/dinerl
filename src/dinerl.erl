@@ -15,6 +15,7 @@
 -export([get_items/1, get_items/2, get_items/3, get_items/4]).
 -export([update_item/3, update_item/4]).
 -export([query_item/3, query_item/4]).
+-export([query/2, query/3]).
 
 -export([update_data/3, update_data/2]).
 
@@ -115,9 +116,9 @@ list_tables([], [], Timeout) ->
 list_tables([], Body, Timeout) ->
     api(list_tables, Body, Timeout);
 list_tables([{start_name, Name}|Rest], Acc, Timeout) ->
-    list_tables(Rest, [{<<"ExclusiveStartTableName">>, Name}|Acc], Timeout);
+    list_tables(Rest, [{<<"ExclusiveStartTableName">>, Name} | Acc], Timeout);
 list_tables([{limit, N}|Rest], Acc, Timeout) ->
-    list_tables(Rest, [{<<"Limit">>, N}|Acc], Timeout).
+    list_tables(Rest, [{<<"Limit">>, N} | Acc], Timeout).
 
 
 put_item(Table, Attributes, Options) ->
@@ -128,11 +129,11 @@ put_item(Table, Attributes, Options, Timeout) ->
 put_item(Table, Attributes, [], PartialBody, Timeout) ->
     api(put_item, [{<<"TableName">>, Table}, {<<"Item">>, Attributes}|PartialBody], Timeout);
 put_item(T, A, [{return, all_old}|Rest], Acc, Timeout) ->
-    put_item(T, A, Rest, [{<<"ReturnValues">>, ?ALL_OLD}|Acc], Timeout);
+    put_item(T, A, Rest, [{<<"ReturnValues">>, ?ALL_OLD} | Acc], Timeout);
 put_item(T, A, [{return, none}|Rest], Acc, Timeout) ->
-    put_item(T, A, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
+    put_item(T, A, Rest, [{<<"ReturnValues">>, ?NONE} | Acc], Timeout);
 put_item(T, A, [{expected, V}|Rest], Acc, Timeout) ->
-    put_item(T, A, Rest, [{<<"Expected">>, attr_updates(V, [])}|Acc], Timeout).
+    put_item(T, A, Rest, [{<<"Expected">>, attr_updates(V, [])} | Acc], Timeout).
 
 
 
@@ -145,11 +146,11 @@ delete_item(Table, Key, Options, Timeout) ->
 delete_item(Table, Key, [], PartialBody, Timeout) ->
     api(delete_item, [{<<"TableName">>, Table}, {<<"Key">>, Key}|PartialBody], Timeout);
 delete_item(T, K, [{return, all_old}|Rest], Acc, Timeout) ->
-    delete_item(T, K, Rest, [{<<"ReturnValues">>, ?ALL_OLD}|Acc], Timeout);
+    delete_item(T, K, Rest, [{<<"ReturnValues">>, ?ALL_OLD} | Acc], Timeout);
 delete_item(T, K, [{return, none}|Rest], Acc, Timeout) ->
-    delete_item(T, K, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
+    delete_item(T, K, Rest, [{<<"ReturnValues">>, ?NONE} | Acc], Timeout);
 delete_item(T, K, [{expected, V}|Rest], Acc, Timeout) ->
-    delete_item(T, K, Rest, [{<<"Expected">>, attr_updates(V, [])}|Acc], Timeout).
+    delete_item(T, K, Rest, [{<<"Expected">>, attr_updates(V, [])} | Acc], Timeout).
 
 
 
@@ -160,11 +161,11 @@ get_item(Table, Key, Options, Timeout) ->
     get_item(Table, Key, Options, [], Timeout).
 
 get_item(T, K, [], Acc, Timeout) ->
-    api(get_item, [{<<"TableName">>, T}, {<<"Key">>, K}|Acc], Timeout);
+    api(get_item, [{<<"TableName">>, T}, {<<"Key">>, K} | Acc], Timeout);
 get_item(T, K, [{consistent, V}|Rest], Acc, Timeout) ->
-    get_item(T, K, Rest, [{<<"ConsistentRead">>, V}|Acc], Timeout);
+    get_item(T, K, Rest, [{<<"ConsistentRead">>, V} | Acc], Timeout);
 get_item(T, K, [{attrs, V}|Rest], Acc, Timeout) ->
-    get_item(T, K, Rest, [{<<"AttributesToGet">>, V}|Acc], Timeout).
+    get_item(T, K, Rest, [{<<"AttributesToGet">>, V} | Acc], Timeout).
 
 
 
@@ -182,7 +183,7 @@ do_get_items([], Acc, Timeout) ->
     api(batch_get_item, [{<<"RequestItems">>, Acc}], Timeout);
 do_get_items([{Table, Keys, Options}|Rest], Acc, Timeout) ->
     Attrs = proplists:get_value(attrs, Options, []),
-    do_get_items(Rest, [{Table, [{<<"Keys">>, Keys}, {<<"AttributesToGet">>, Attrs}]}|Acc], Timeout).
+    do_get_items(Rest, [{Table, [{<<"Keys">>, Keys}, {<<"AttributesToGet">>, Attrs}]} | Acc], Timeout).
 
 
 
@@ -193,23 +194,24 @@ update_item(Table, Key, Options, Timeout) ->
     update_item(Table, Key, Options, [], Timeout).
 
 update_item(T, K, [], Acc, Timeout) ->
-    api(update_item, [{<<"TableName">>, T}, {<<"Key">>, K}|Acc], Timeout);
+    api(update_item, [{<<"TableName">>, T}, {<<"Key">>, K} | Acc], Timeout);
 update_item(T, K, [{update, AttributeUpdates}|Rest], Acc, Timeout) ->
-    update_item(T, K, Rest, [{<<"AttributeUpdates">>, attr_updates(AttributeUpdates, [])}|Acc], Timeout);
+    update_item(T, K, Rest, [{<<"AttributeUpdates">>, attr_updates(AttributeUpdates, [])} | Acc], Timeout);
 update_item(T, K, [{expected, V}|Rest], Acc, Timeout) ->
-    update_item(T, K, Rest, [{<<"Expected">>, attr_updates(V, [])}|Acc], Timeout);
+    update_item(T, K, Rest, [{<<"Expected">>, attr_updates(V, [])} | Acc], Timeout);
 update_item(T, K, [{return, none}|Rest], Acc, Timeout) ->
-    update_item(T, K, Rest, [{<<"ReturnValues">>, ?NONE}|Acc], Timeout);
+    update_item(T, K, Rest, [{<<"ReturnValues">>, ?NONE} | Acc], Timeout);
 update_item(T, K, [{return, all_old}|Rest], Acc, Timeout) ->
-    update_item(T, K, Rest, [{<<"ReturnValues">>, ?ALL_OLD}|Acc], Timeout);
+    update_item(T, K, Rest, [{<<"ReturnValues">>, ?ALL_OLD} | Acc], Timeout);
 update_item(T, K, [{return, updated_old}|Rest], Acc, Timeout) ->
-    update_item(T, K, Rest, [{<<"ReturnValues">>, ?UPDATED_OLD}|Acc], Timeout);
+    update_item(T, K, Rest, [{<<"ReturnValues">>, ?UPDATED_OLD} | Acc], Timeout);
 update_item(T, K, [{return, all_new}|Rest], Acc, Timeout) ->
-    update_item(T, K, Rest, [{<<"ReturnValues">>, ?ALL_NEW}|Acc], Timeout);
+    update_item(T, K, Rest, [{<<"ReturnValues">>, ?ALL_NEW} | Acc], Timeout);
 update_item(T, K, [{return, updated_new}|Rest], Acc, Timeout) ->
-    update_item(T, K, Rest, [{<<"ReturnValues">>, ?UPDATED_NEW}|Acc], Timeout).
+    update_item(T, K, Rest, [{<<"ReturnValues">>, ?UPDATED_NEW} | Acc], Timeout).
 
 %% query_item options:
+%% Uses amazon api version: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/API_Query_v20111205.html
 %% limit: int, max number of results
 %% count: bool, only return the total count
 %% scan_index_forward: bool, set to false to reverse the sort order
@@ -217,32 +219,54 @@ update_item(T, K, [{return, updated_new}|Rest], Acc, Timeout) ->
 %% exclusive_start_key: output from LastEvaluatedKey when limit(size or limit param) is reached
 %% attrs: array( binary ), [<<"a">>,<<"b">>], only return these attributes
 %% range_condition: {array( attributes), operation }
-%% eg, dinerl:query_item(<<"table">>,[{<<"S">>, <<"hash_value">>}], [{range_condition, { [[{<<"S">>, <<"range_value">>}]]  ,<<"EQ">> }}]).
-
+%% eg, dinerl:query_item(<<"table">>,[{<<"S">>, <<"hash_value">>}],
+%%   [{range_condition, { [[{<<"S">>, <<"range_value">>}]]  ,<<"EQ">> }}]).
 query_item(Table, Key, Options) ->
     query_item(Table, Key, Options, undefined).
 query_item(Table, Key, Options, Timeout) ->
     query_item(Table, Key, Options, [], Timeout).
 
-query_item(T, K, [], Acc, Timeout) ->
-    api(query_item, [{<<"TableName">>, T}, {<<"HashKeyValue">>, K}|Acc], Timeout);
-
-query_item(T, K, [{limit, V}|Rest], Acc, Timeout) ->
-    query_item(T, K, Rest, [{<<"Limit">>, V}|Acc], Timeout);
-query_item(T, K, [{count, V}|Rest], Acc, Timeout) ->
-    query_item(T, K, Rest, [{<<"Count">>, V}|Acc], Timeout);
-query_item(T, K, [{scan_index_forward, V}|Rest], Acc, Timeout) ->
-    query_item(T, K, Rest, [{<<"ScanIndexForward">>, V}|Acc], Timeout);
-query_item(T, K, [{consistent, V}|Rest], Acc, Timeout) ->
-    query_item(T, K, Rest, [{<<"ConsistentRead">>, V}|Acc], Timeout);
-query_item(T, K, [{exclusive_start_key, V}|Rest], Acc, Timeout) ->
-    query_item(T, K, Rest, [{<<"ExclusiveStartKey">>, V}|Acc], Timeout);
-query_item(T, K, [{range_condition, { V, Op }}|Rest], Acc, Timeout) ->
-    query_item(T, K, Rest, [{<<"RangeKeyCondition">>, [{ <<"AttributeValueList">>, V }, {<<"ComparisonOperator">>, Op }]}|Acc], Timeout);
-query_item(T, K, [{attrs, V}|Rest], Acc, Timeout) ->
-    query_item(T, K, Rest, [{<<"AttributesToGet">>, V}|Acc], Timeout).
+query_item(T, K, List, Acc, Timeout) ->
+    NewParameters = [{<<"TableName">>, T}, {<<"HashKeyValue">>, K}| convert_query_parameters(List, Acc)],
+    api(query_item_20111205, NewParameters, Timeout).
 
 
+%% Uses new API
+query(Table, Options) ->
+    query_item(Table, Options, undefined).
+query(Table, Options, Timeout) ->
+    NewParameters = [{<<"TableName">>, Table} | convert_query_parameters(Options, [])],
+    api(query_item_20120810, NewParameters, Timeout).
+
+
+convert_query_parameters([], Acc) ->
+    Acc;
+convert_query_parameters([{limit, V}|Rest], Acc) ->
+    convert_query_parameters(Rest, [{<<"Limit">>, V} | Acc]);
+convert_query_parameters([{count, V}|Rest], Acc) ->
+    convert_query_parameters(Rest, [{<<"Count">>, V} | Acc]);
+convert_query_parameters([{scan_index_forward, V}|Rest], Acc) ->
+    convert_query_parameters(Rest, [{<<"ScanIndexForward">>, V} | Acc]);
+convert_query_parameters([{consistent, V}|Rest], Acc) ->
+    convert_query_parameters(Rest, [{<<"ConsistentRead">>, V} | Acc]);
+convert_query_parameters([{exclusive_start_key, V}|Rest], Acc) ->
+    convert_query_parameters(Rest, [{<<"ExclusiveStartKey">>, V} | Acc]);
+convert_query_parameters([{range_condition, { V, Op }}|Rest], Acc) ->
+    convert_query_parameters(Rest,
+        [{<<"RangeKeyCondition">>,
+        [{ <<"AttributeValueList">>, V }, {<<"ComparisonOperator">>, Op }]} | Acc]);
+convert_query_parameters([{attrs, V}|Rest], Acc) ->
+    convert_query_parameters(Rest, [{<<"AttributesToGet">>, V} | Acc]);
+convert_query_parameters([{project_expression, ProjectionExpression} | Rest], Acc) ->
+    convert_query_parameters(Rest, [{<<"ProjectionExpression">>, ProjectionExpression} | Acc]);
+convert_query_parameters([{key_condition_expression, KeyConditionExpression} | Rest], Acc) ->
+    convert_query_parameters(Rest, [{<<"KeyConditionExpression">>, KeyConditionExpression} | Acc]);
+convert_query_parameters([{condition_expression, KeyConditionExpression} | Rest], Acc) ->
+    convert_query_parameters(Rest, [{<<"ConditionExpression">>, KeyConditionExpression} | Acc]);
+convert_query_parameters([{filter_expression, KeyConditionExpression} | Rest], Acc) ->
+    convert_query_parameters(Rest, [{<<"FilterExpression">>, KeyConditionExpression} | Acc]);
+convert_query_parameters([{expression_attribute_values, ExpressionAttributeValues} | Rest], Acc) ->
+    convert_query_parameters(Rest, [{<<"ExpressionAttributeValues">>, ExpressionAttributeValues} | Acc]).
 
 batch_write_item(TableName, PutItems, DeleteKeys) ->
     api(batch_write_item, [{<<"RequestItems">>, [
@@ -329,7 +353,7 @@ expected([{Option, Value}|Rest], Acc) ->
 attr_updates([], Acc) ->
     Acc;
 attr_updates([{AttrName, Opts}|Rest], Acc) ->
-    attr_updates(Rest, [{AttrName, expected(Opts, [])}|Acc]).
+    attr_updates(Rest, [{AttrName, expected(Opts, [])} | Acc]).
 
 
 
