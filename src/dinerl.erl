@@ -6,16 +6,17 @@
 -include("dinerl_types.hrl").
 
 -export([setup/3, setup/1, setup/0,
-         api/1, api/2, api/3]).
+         api/1, api/2, api/3, api/4]).
 
 -export([create_table/4, create_table/5, delete_table/1, delete_table/2]).
 -export([describe_table/1, describe_table/2, update_table/3, update_table/4]).
 -export([list_tables/0, list_tables/1, list_tables/2, put_item/3, put_item/4]).
--export([delete_item/3, delete_item/4, get_item/3, get_item/4]).
--export([get_items/1, get_items/2, get_items/3, get_items/4]).
+-export([delete_item/3, delete_item/4]).
+-export([get_item/3, get_item/4, get_item/5]).
+-export([get_items/1, get_items/2, get_items/3, get_items/4, get_items/5]).
 -export([update_item/3, update_item/4]).
--export([query_item/3, query_item/4]).
--export([query/2, query/3]).
+-export([query_item/3, query_item/4, query_item/5]).
+-export([query/2, query/3, query/4]).
 
 -export([update_data/3, update_data/2]).
 
@@ -60,13 +61,23 @@ api(Name, Body) ->
 
 -spec api(method(), any(), integer()) ->result().
 api(Name, Body, Timeout) ->
+    api(Name, Body, Timeout, undefined).
+
+-spec api(method(), any(), integer(), undefined | string()) ->result().
+api(Name, Body, Timeout, Region) ->
     case catch(ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2)) of
         {'EXIT', {badarg, _}} ->
             {error, missing_credentials, ""};
         {ApiAccessKeyId, ApiSecretAccessKey, Zone, ApiToken, Date, _} ->
-            dinerl_client:api(ApiAccessKeyId, ApiSecretAccessKey, Zone,
+            TargetRegion = case Region of
+                                  undefined -> Zone;
+                                  _ -> Region
+                              end,
+            dinerl_client:api(ApiAccessKeyId, ApiSecretAccessKey,
+                              TargetRegion,
                               ApiToken, Date, Name, Body, Timeout)
     end.
+
 
 
 -spec create_table(string()|binary(), keyschema(), integer(), integer()) -> jsonf().
@@ -156,34 +167,38 @@ delete_item(T, K, [{expected, V}|Rest], Acc, Timeout) ->
 
 
 get_item(Table, Key, Options) ->
-    get_item(Table, Key, Options, undefined).
+    get_item(Table, Key, Options, [], undefined, undefined).
 get_item(Table, Key, Options, Timeout) ->
-    get_item(Table, Key, Options, [], Timeout).
+    get_item(Table, Key, Options, [], Timeout, undefined).
+get_item(Table, Key, Options, Timeout, Region) ->
+    get_item(Table, Key, Options, [], Timeout, Region).
 
-get_item(T, K, [], Acc, Timeout) ->
-    api(get_item, [{<<"TableName">>, T}, {<<"Key">>, K} | Acc], Timeout);
-get_item(T, K, [{consistent, V}|Rest], Acc, Timeout) ->
-    get_item(T, K, Rest, [{<<"ConsistentRead">>, V} | Acc], Timeout);
-get_item(T, K, [{attrs, V}|Rest], Acc, Timeout) ->
-    get_item(T, K, Rest, [{<<"AttributesToGet">>, V} | Acc], Timeout).
+get_item(T, K, [], Acc, Timeout, Region) ->
+    api(get_item, [{<<"TableName">>, T}, {<<"Key">>, K} | Acc], Timeout, Region);
+get_item(T, K, [{consistent, V}|Rest], Acc, Timeout, Region) ->
+    get_item(T, K, Rest, [{<<"ConsistentRead">>, V} | Acc], Timeout, Region);
+get_item(T, K, [{attrs, V}|Rest], Acc, Timeout, Region) ->
+    get_item(T, K, Rest, [{<<"AttributesToGet">>, V} | Acc], Timeout, Region).
 
 
 
 
 get_items(Table, Keys, Options) ->
-    do_get_items([{Table, Keys, Options}], [], undefined).
+    do_get_items([{Table, Keys, Options}], [], undefined, undefined).
 get_items(Table, Keys, Options, Timeout) ->
-    do_get_items([{Table, Keys, Options}], [], Timeout).
+    do_get_items([{Table, Keys, Options}], [], Timeout, undefined).
+get_items(Table, Keys, Options, Timeout, Region) ->
+    do_get_items([{Table, Keys, Options}], [], Timeout, Region).
 get_items(MultiTableQuery) ->
-    do_get_items(MultiTableQuery, [], undefined).
+    do_get_items(MultiTableQuery, [], undefined, undefined).
 get_items(MultiTableQuery, Timeout) ->
-    do_get_items(MultiTableQuery, [], Timeout).
+    do_get_items(MultiTableQuery, [], Timeout, undefined).
 
-do_get_items([], Acc, Timeout) ->
-    api(batch_get_item, [{<<"RequestItems">>, Acc}], Timeout);
-do_get_items([{Table, Keys, Options}|Rest], Acc, Timeout) ->
+do_get_items([], Acc, Timeout, Region) ->
+    api(batch_get_item, [{<<"RequestItems">>, Acc}], Timeout, Region);
+do_get_items([{Table, Keys, Options}|Rest], Acc, Timeout, Region) ->
     Attrs = proplists:get_value(attrs, Options, []),
-    do_get_items(Rest, [{Table, [{<<"Keys">>, Keys}, {<<"AttributesToGet">>, Attrs}]} | Acc], Timeout).
+    do_get_items(Rest, [{Table, [{<<"Keys">>, Keys}, {<<"AttributesToGet">>, Attrs}]} | Acc], Timeout, Region).
 
 
 
@@ -222,21 +237,25 @@ update_item(T, K, [{return, updated_new}|Rest], Acc, Timeout) ->
 %% eg, dinerl:query_item(<<"table">>,[{<<"S">>, <<"hash_value">>}],
 %%   [{range_condition, { [[{<<"S">>, <<"range_value">>}]]  ,<<"EQ">> }}]).
 query_item(Table, Key, Options) ->
-    query_item(Table, Key, Options, undefined).
+    query_item(Table, Key, Options, [], undefined, undefined).
 query_item(Table, Key, Options, Timeout) ->
-    query_item(Table, Key, Options, [], Timeout).
+    query_item(Table, Key, Options, [], Timeout, undefined).
+query_item(Table, Key, Options, Timeout, Region) ->
+    query_item(Table, Key, Options, [], Timeout, Region).
 
-query_item(T, K, List, Acc, Timeout) ->
+query_item(T, K, List, Acc, Timeout, Region) ->
     NewParameters = [{<<"TableName">>, T}, {<<"HashKeyValue">>, K}| convert_query_parameters(List, Acc)],
-    api(query_item_20111205, NewParameters, Timeout).
+    api(query_item_20111205, NewParameters, Timeout, Region).
 
 
 %% Uses new API
 query(Table, Options) ->
-    query_item(Table, Options, undefined).
+    query(Table, Options, undefined, undefined).
 query(Table, Options, Timeout) ->
+    query(Table, Options, Timeout, undefined).
+query(Table, Options, Timeout, Region) ->
     NewParameters = [{<<"TableName">>, Table} | convert_query_parameters(Options, [])],
-    api(query_item_20120810, NewParameters, Timeout).
+    api(query_item_20120810, NewParameters, Timeout, Region).
 
 
 convert_query_parameters([], Acc) ->
