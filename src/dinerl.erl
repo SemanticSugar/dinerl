@@ -15,6 +15,7 @@
 -export([get_item/3, get_item/4, get_item/5]).
 -export([get_items/1, get_items/2, get_items/3, get_items/4, get_items/5]).
 -export([update_item/3, update_item/4]).
+-export([update_item_with_expression/7]).
 -export([query_item/3, query_item/4, query_item/5]).
 -export([query/2, query/3, query/4]).
 
@@ -201,6 +202,20 @@ do_get_items([{Table, Keys, Options}|Rest], Acc, Timeout, Region) ->
     do_get_items(Rest, [{Table, [{<<"Keys">>, Keys}, {<<"AttributesToGet">>, Attrs}]} | Acc], Timeout, Region).
 
 
+update_item_with_expression(TableName, Key, UpdateExpression, ExpressionAttributeValues, ReturnValues, Acc, Timeout) ->
+    api(
+        update_item,
+        [
+            {<<"TableName">>, TableName},
+            {<<"Key">>, Key},
+            {<<"UpdateExpression">>, UpdateExpression},
+            {<<"ExpressionAttributeValues">>, ExpressionAttributeValues},
+            {<<"ReturnValues">>, ReturnValues}
+            | Acc
+        ],
+        Timeout
+    )
+.
 
 
 update_item(Table, Key, Options) ->
