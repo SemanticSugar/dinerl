@@ -203,19 +203,26 @@ do_get_items([{Table, Keys, Options}|Rest], Acc, Timeout, Region) ->
 
 
 update_item_with_expression(TableName, Key, UpdateExpression, ExpressionAttributeValues, ReturnValues, Acc, Timeout) ->
+    MandatoryParams = [
+        {<<"TableName">>, TableName},
+        {<<"Key">>, Key},
+        {<<"UpdateExpression">>, UpdateExpression}
+    ],
+    OptionalParams = [
+        {<<"ExpressionAttributeValues">>, ExpressionAttributeValues},
+        {<<"ReturnValues">>, ReturnValues}
+    ],
+    DefinedOptionalParams = lists:filter(fun ({_, undefined}) ->
+        false;
+        (_) ->
+            true
+    end, OptionalParams),
+
     api(
         update_item,
-        [
-            {<<"TableName">>, TableName},
-            {<<"Key">>, Key},
-            {<<"UpdateExpression">>, UpdateExpression},
-            {<<"ExpressionAttributeValues">>, ExpressionAttributeValues},
-            {<<"ReturnValues">>, ReturnValues}
-            | Acc
-        ],
+        MandatoryParams ++ DefinedOptionalParams ++ Acc,
         Timeout
-    )
-.
+    ).
 
 
 update_item(Table, Key, Options) ->
