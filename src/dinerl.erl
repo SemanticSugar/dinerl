@@ -15,6 +15,11 @@
 -export([get_item/3, get_item/4, get_item/5]).
 -export([get_items/1, get_items/2, get_items/3, get_items/4, get_items/5]).
 -export([update_item/3, update_item/4]).
+-export([update_item_with_expression/3]).
+-export([update_item_with_expression/4]).
+-export([update_item_with_expression/5]).
+-export([update_item_with_expression/6]).
+-export([update_item_with_expression/7]).
 -export([query_item/3, query_item/4, query_item/5]).
 -export([query/2, query/3, query/4]).
 
@@ -201,6 +206,39 @@ do_get_items([{Table, Keys, Options}|Rest], Acc, Timeout, Region) ->
     do_get_items(Rest, [{Table, [{<<"Keys">>, Keys}, {<<"AttributesToGet">>, Attrs}]} | Acc], Timeout, Region).
 
 
+update_item_with_expression(TableName, Key, UpdateExpression) ->
+    update_item_with_expression(TableName, Key, UpdateExpression, undefined, <<"NONE">>, [], undefined).
+
+update_item_with_expression(TableName, Key, UpdateExpression, ExpressionAttributeValues) ->
+    update_item_with_expression(TableName, Key, UpdateExpression, ExpressionAttributeValues, <<"NONE">>, [], undefined).
+
+update_item_with_expression(TableName, Key, UpdateExpression, ExpressionAttributeValues, ReturnValues) ->
+    update_item_with_expression(TableName, Key, UpdateExpression, ExpressionAttributeValues, ReturnValues, [], undefined).
+
+update_item_with_expression(TableName, Key, UpdateExpression, ExpressionAttributeValues, ReturnValues, Acc) ->
+    update_item_with_expression(TableName, Key, UpdateExpression, ExpressionAttributeValues, ReturnValues, Acc, undefined).
+
+update_item_with_expression(TableName, Key, UpdateExpression, ExpressionAttributeValues, ReturnValues, Acc, Timeout) ->
+    MandatoryParams = [
+        {<<"TableName">>, TableName},
+        {<<"Key">>, Key},
+        {<<"UpdateExpression">>, UpdateExpression}
+    ],
+    OptionalParams = [
+        {<<"ExpressionAttributeValues">>, ExpressionAttributeValues},
+        {<<"ReturnValues">>, ReturnValues}
+    ],
+    DefinedOptionalParams = lists:filter(fun ({_, undefined}) ->
+        false;
+        (_) ->
+            true
+    end, OptionalParams),
+
+    api(
+        update_item,
+        MandatoryParams ++ DefinedOptionalParams ++ Acc,
+        Timeout
+    ).
 
 
 update_item(Table, Key, Options) ->

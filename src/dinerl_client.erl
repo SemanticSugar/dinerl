@@ -20,7 +20,7 @@ method_name(put_item) ->
 method_name(delete_item) ->
     "DynamoDB_20111205.DeleteItem";
 method_name(update_item) ->
-    "DynamoDB_20111205.UpdateItem";
+    "DynamoDB_20120810.UpdateItem";
 
 %%
 %% Table related operations
