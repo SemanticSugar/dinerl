@@ -3,6 +3,7 @@
 -type zone() :: string().
 -type token() :: string().
 -type rfcdate() :: string().
+-type aws_datetime() :: string().
 -type endpoint() :: string().
 
 -type field() :: {binary(), binary()|string()}.
