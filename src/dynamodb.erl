@@ -3,7 +3,7 @@
 
 -include("dinerl_types.hrl").
 
--export([endpoint/1, signature_header/7, call/7, call/8]).
+-export([call/5, call/6]).
 
 
 -spec endpoint(zone()) -> endpoint().
@@ -15,47 +15,36 @@ endpoint("ap-southeast-1" ++ _R) -> "dynamodb.ap-southeast-1.amazonaws.com";
 endpoint("eu-west-1" ++ _R) -> "dynamodb.eu-west-1.amazonaws.com".
 
 
-
-signature_header(AccessKeyId, SecretAccessKey, Target, Token, Date, EndPoint, Body) ->
-    SignString = ["POST", $\n,
-                  "/", $\n,
-                  $\n,
-                  "host:", EndPoint, $\n,
-                  "x-amz-date:", Date, $\n,
-                  "x-amz-security-token:", Token, $\n,
-                  "x-amz-target:", Target, $\n,
-                  $\n,
-                  Body],
-    StringToSign = crypto:hash(sha, SignString),
-    Signature = base64:encode_to_string(crypto:hmac(sha, SecretAccessKey, StringToSign)),
-    {ok,
-     {"x-amzn-authorization",
-      ["AWS3 AWSAccessKeyId=",
-       AccessKeyId,
-       ",Algorithm=HmacSHA1,SignedHeaders=host;x-amz-date;x-amz-security-token;x-amz-target,Signature=",
-       Signature]}}.
+-spec region(zone()) -> string().
+region("us-east-1" ++ _R) -> "us-east-1";
+region("us-west-1" ++ _R) -> "us-west-1";
+region("us-west-2" ++ _R) -> "us-west-2";
+region("ap-northeast-1" ++ _R) -> "ap-northeast-1";
+region("ap-southeast-1" ++ _R) -> "ap-southeast-1";
+region("eu-west-1" ++ _R) -> "eu-west-1".
 
 
--spec call(access_key_id(), secret_access_key(),
-           zone(), string(), token(), rfcdate(),
-           any()) -> result().
-call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body) ->
-    call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, 1000).
+-spec call(awsv4:credentials(), zone(), string(),
+           aws_datetime(), any(), undefined | pos_integer()) -> result().
+call(Credentials, Zone, Target, ISODate, Body, undefined) ->
+    call(Credentials, Zone, Target, ISODate, Body, 1000);
 
--spec call(access_key_id(), secret_access_key(),
-           zone(), string(), token(), rfcdate(),
-           any(), integer()) -> result().
-call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, undefined) ->
-    call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, 1000);
-call(AccessKeyId, SecretAccessKey, Zone, Target, Token, RFCDate, Body, Timeout) ->
-    EndPoint = endpoint(Zone),
-    {ok, SHeader} = signature_header(AccessKeyId, SecretAccessKey, Target,
-                                     Token, RFCDate, EndPoint, Body),
-    submit("http://" ++ EndPoint ++ "/",
-           [{"content-type", "application/x-amz-json-1.0"},
-            {"x-amz-date", RFCDate},
-            {"x-amz-security-token", Token},
-            {"x-amz-target", Target}, SHeader], Body, Timeout).
+call(Credentials, Zone, Target, ISODate, Body, Timeout) ->
+    Host = endpoint(Zone),
+    Headers = awsv4:headers(Credentials,
+                            #{service => "dynamodb",
+                              target_api => Target,
+                              method => "POST",
+                              aws_date => ISODate,
+                              host => Host,
+                              region => region(Zone)},
+                            Body),
+    submit("http://" ++ Host ++ "/",
+           [{"content-type", "application/x-amz-json-1.0"}
+            | Headers], Body, Timeout).
+
+call(Credentials, Zone, Target, RFCDate, Body) ->
+    call(Credentials, Zone, Target, RFCDate, Body, 1000).
 
 
 -spec submit(endpoint(), headers(), any(), integer()) -> result().

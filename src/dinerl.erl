@@ -23,36 +23,31 @@
 -export([query_item/3, query_item/4, query_item/5]).
 -export([query/2, query/3, query/4]).
 
--export([update_data/3, update_data/2]).
+-export([update_data/1]).
 
 -export([batch_write_item/3]).
 
--spec setup(access_key_id(), secret_access_key(), zone()) ->
-                   {ok, clientarguments()}.
+-spec setup(access_key_id(), secret_access_key(), zone()) -> {ok, clientarguments()}.
 setup(AccessKeyId, SecretAccessKey, Zone) ->
-    Q = fun () ->
-                iam:get_session_token(AccessKeyId, SecretAccessKey)
-        end,
-    setup_(Q, Zone).
+    application:set_env(erliam, aws_access_key, AccessKeyId),
+    application:set_env(erliam, aws_secret_key, SecretAccessKey),
+    setup_(Zone).
 
 -spec setup(zone()) -> {ok, clientarguments()}.
 setup(Zone) ->
-    Q = fun () ->
-                imds:get_session_token()
-        end,
-    setup_(Q, Zone).
+    setup_(Zone).
 
 -spec setup() -> {ok, clientarguments()}.
 setup() ->
     {ok, Zone} = imds:zone(),
-    setup(Zone).
+    setup_(Zone).
 
 
--spec setup_(function(), string()) -> {ok, clientarguments()}.
-setup_(Q, Zone) ->
+-spec setup_(string()) -> {ok, clientarguments()}.
+setup_(Zone) ->
     ets:new(?DINERL_DATA, [named_table, public]),
-    R = update_data(Q, Zone),
-    timer:apply_interval(1000, ?MODULE, update_data, [Q, Zone]),
+    R = update_data(Zone),
+    timer:apply_interval(1000, ?MODULE, update_data, [Zone]),
     R.
 
 
@@ -73,14 +68,12 @@ api(Name, Body, Timeout, Region) ->
     case catch(ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2)) of
         {'EXIT', {badarg, _}} ->
             {error, missing_credentials, ""};
-        {ApiAccessKeyId, ApiSecretAccessKey, Zone, ApiToken, Date, _} ->
+        {Credentials, Zone, Date} ->
             TargetRegion = case Region of
                                   undefined -> Zone;
                                   _ -> Region
                               end,
-            dinerl_client:api(ApiAccessKeyId, ApiSecretAccessKey,
-                              TargetRegion,
-                              ApiToken, Date, Name, Body, Timeout)
+            dinerl_client:api(Credentials, TargetRegion, Date, Name, Body, Timeout)
     end.
 
 
@@ -343,62 +336,14 @@ make_batch_delete(Key) ->
 
 %% Internal
 %%
-%% Every second it updates the Date part of the arguments
-%% When within 120 seconds of the expiration of the token instead it refreshes also the token
--spec update_data(access_key_id(), secret_access_key(), zone()) ->
-                         {ok, clientarguments()}.
-update_data(AccessKeyId, SecretAccessKey, Zone) ->
-    update_data(fun () ->
-                        iam:get_session_token(AccessKeyId, SecretAccessKey)
-                end,
-                Zone).
-
-
--spec update_data(function(), zone()) ->
-                         {ok, clientarguments()}.
-update_data(GetToken, Zone) ->
-    case catch(ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2)) of
-        {'EXIT', {badarg, _}} ->
-            CurrentApiAccessKeyId = "123",
-            CurrentApiSecretAccessKey = "123",
-            Zone = Zone,
-            CurrentApiToken = "123",
-            CurrentExpirationSeconds = calendar:datetime_to_gregorian_seconds(erlang:universaltime());
-
-        Result ->
-            {CurrentApiAccessKeyId,
-             CurrentApiSecretAccessKey,
-             Zone,
-             CurrentApiToken,
-             _Date,
-             CurrentExpirationSeconds} = Result
-
-    end,
-
-    NewDate = httpd_util:rfc1123_date(),
-    NowSeconds = calendar:datetime_to_gregorian_seconds(erlang:universaltime()),
-    SecondsToExpire = CurrentExpirationSeconds - NowSeconds,
-
-    case SecondsToExpire < 120 of
-        true ->
-            NewToken = GetToken(),
-
-            ExpirationString = proplists:get_value(expiration, NewToken),
-            ApiAccessKeyId = proplists:get_value(access_key_id, NewToken),
-            ApiSecretAccessKey = proplists:get_value(secret_access_key, NewToken),
-            ApiToken = proplists:get_value(token, NewToken),
-            ExpirationSeconds = calendar:datetime_to_gregorian_seconds(iso8601:parse(ExpirationString)),
-
-            NewArgs = {ApiAccessKeyId, ApiSecretAccessKey, Zone, ApiToken, NewDate, ExpirationSeconds};
-
-        false ->
-            NewArgs = {CurrentApiAccessKeyId, CurrentApiSecretAccessKey,
-                       Zone, CurrentApiToken, NewDate, CurrentExpirationSeconds}
-    end,
-
+%% Every second it updates the Date part of the arguments and copies the latest cached
+%% credentials from erliam.
+-spec update_data(zone()) -> {ok, clientarguments()}.
+update_data(Zone) ->
+    NewDate = awsv4:isonow(),
+    NewArgs = {erliam:credentials(), Zone, NewDate},
     ets:insert(?DINERL_DATA, {?ARGS_KEY, NewArgs}),
     {ok, NewArgs}.
-
 
 
 expected([], Acc) ->

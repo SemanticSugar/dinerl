@@ -3,11 +3,11 @@
 
 -include("dinerl_types.hrl").
 
--export([api/7, api/8]).
+-export([api/5, api/6]).
 
 %%
 %% Item related operations
-%% 
+%%
 -spec method_name(method()) -> string().
 method_name(batch_get_item) ->
     "DynamoDB_20111205.BatchGetItem";
@@ -48,18 +48,15 @@ method_name(scan) ->
     "DynamoDB_20111205.Scan".
 
 
--spec api(access_key_id(), secret_access_key(), zone(),
-          token(), rfcdate(), method(), any()) -> result().
-api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body) ->
-    api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, undefined).
-
--spec api(access_key_id(), secret_access_key(), zone(),
-          token(), rfcdate(), method(), any(), integer()) -> result().
-api(AccessKeyId, SecretAccessKey, Zone, Token, RFCDate, Name, Body, Timeout) ->
-    case dynamodb:call(AccessKeyId, SecretAccessKey, Zone, method_name(Name),
-                       Token, RFCDate, dmochijson2:encode(Body), Timeout) of
+-spec api(awsv4:credentials(), zone(), aws_datetime(), method(), any(), undefined | integer()) -> result().
+api(Credentials, Zone, ISODate, Name, Body, Timeout) ->
+    case dynamodb:call(Credentials, Zone, method_name(Name),
+                       ISODate, dmochijson2:encode(Body), Timeout) of
         {ok, Response} ->
             {ok, dmochijson2:decode(Response)};
         {error, Code, Reason} ->
             {error, Code, Reason}
     end.
+
+api(Credentials, Zone, ISODate, Name, Body) ->
+    api(Credentials, Zone, ISODate, Name, Body, undefined).
