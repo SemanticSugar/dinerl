@@ -295,6 +295,8 @@ convert_query_parameters([{limit, V}|Rest], Acc) ->
     convert_query_parameters(Rest, [{<<"Limit">>, V} | Acc]);
 convert_query_parameters([{count, V}|Rest], Acc) ->
     convert_query_parameters(Rest, [{<<"Count">>, V} | Acc]);
+convert_query_parameters([{index_name, IndexName} | Rest], Acc) ->
+    convert_query_parameters(Rest, [{<<"IndexName">>, IndexName} | Acc]);
 convert_query_parameters([{scan_index_forward, V}|Rest], Acc) ->
     convert_query_parameters(Rest, [{<<"ScanIndexForward">>, V} | Acc]);
 convert_query_parameters([{consistent, V}|Rest], Acc) ->
