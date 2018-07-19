@@ -22,7 +22,7 @@
                   update_item | create_table | list_tables | describe_table |
                   update_table | delete_table | q | scan.
 
--type result() :: {ok, any()} | {error, string(), string()} | {error, term(), string()}.
+-type result() :: {ok, any()} | {error, string(), string()} | {error, term(), timeout | string()}.
 
 -type header() :: {string() | atom(), string()}.
 -type headers() :: [header()].
