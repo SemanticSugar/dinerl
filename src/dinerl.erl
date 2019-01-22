@@ -82,7 +82,7 @@ api(Name, Body, Timeout, Region) ->
 create_table(Name, Key, ReadsPerSecond, WritesPerSecond) ->
     create_table(Name, Key, ReadsPerSecond, WritesPerSecond, undefined).
 
--spec create_table(string()|binary(), keyschema(), integer(), integer(), integer()) -> jsonf().
+-spec create_table(string()|binary(), keyschema(), integer(), integer(), undefined | integer()) -> jsonf().
 create_table(Name, Key, ReadsPerSecond, WritesPerSecond, Timeout) ->
     api(create_table,
         [{<<"TableName">>, Name},

@@ -64,14 +64,14 @@
 -define(IS_WHITESPACE(C),
         (C =:= $\s orelse C =:= $\t orelse C =:= $\r orelse C =:= $\n)).
 
-%% @type json_string() = atom | binary()
-%% @type json_number() = integer() | float()
-%% @type json_array() = [json_term()]
-%% @type json_object() = {struct, [{json_string(), json_term()}]}
-%% @type json_eep18_object() = {[{json_string(), json_term()}]}
-%% @type json_iolist() = {json, iolist()}
-%% @type json_term() = json_string() | json_number() | json_array() |
-%%                     json_object() | json_eep18_object() | json_iolist()
+-type json_string() :: atom | binary().
+-type json_number() :: integer() | float().
+-type json_array() :: [json_term()].
+-type json_object() :: {struct, [{json_string(), json_term()}]}.
+-type json_eep18_object() :: {[{json_string(), json_term()}]}.
+-type json_iolist() :: {json, iolist()}.
+-type json_term() :: json_string() | json_number() | json_array() |
+                     json_object() | json_eep18_object() | json_iolist().
 
 -record(encoder, {handler=null,
                   utf8=false}).
@@ -92,6 +92,7 @@ encoder(Options) ->
 
 %% @spec encode(json_term()) -> iolist()
 %% @doc Encode the given as JSON to an iolist.
+-spec encode(json_term()) -> iolist().
 encode(Any) ->
     json_encode(Any, #encoder{}).
 
@@ -445,18 +446,18 @@ tokenize_string(B, S=#decoder{offset=O}, Acc) ->
         <<_:O/binary, "\\t", _/binary>> ->
             tokenize_string(B, ?ADV_COL(S, 2), [$\t | Acc]);
         <<_:O/binary, "\\u", C3, C2, C1, C0, Rest/binary>> ->
-            C = erlang:list_to_integer([C3, C2, C1, C0], 16),
-            if C > 16#D7FF, C < 16#DC00 ->
-                %% coalesce UTF-16 surrogate pair
-                <<"\\u", D3, D2, D1, D0, _/binary>> = Rest,
-                D = erlang:list_to_integer([D3,D2,D1,D0], 16),
-                [CodePoint] = xmerl_ucs:from_utf16be(<<C:16/big-unsigned-integer,
-                    D:16/big-unsigned-integer>>),
-                Acc1 = lists:reverse(xmerl_ucs:to_utf8(CodePoint), Acc),
-                tokenize_string(B, ?ADV_COL(S, 12), Acc1);
-            true ->
-                Acc1 = lists:reverse(xmerl_ucs:to_utf8(C), Acc),
-                tokenize_string(B, ?ADV_COL(S, 6), Acc1)
+            case erlang:list_to_integer([C3, C2, C1, C0], 16) of
+                C when C > 16#D7FF, C < 16#DC00 ->
+                    %% coalesce UTF-16 surrogate pair
+                    <<"\\u", D3, D2, D1, D0, _/binary>> = Rest,
+                    D = erlang:list_to_integer([D3,D2,D1,D0], 16),
+                    [CodePoint] = xmerl_ucs:from_utf16be(<<C:16/big-unsigned-integer,
+                        D:16/big-unsigned-integer>>),
+                    Acc1 = lists:reverse(xmerl_ucs:to_utf8(CodePoint), Acc),
+                    tokenize_string(B, ?ADV_COL(S, 12), Acc1);
+                C ->
+                    Acc1 = lists:reverse(xmerl_ucs:to_utf8(C), Acc),
+                    tokenize_string(B, ?ADV_COL(S, 6), Acc1)
             end;
         <<_:O/binary, C1, _/binary>> when C1 < 128 ->
             tokenize_string(B, ?INC_CHAR(S, C1), [C1 | Acc]);
@@ -788,7 +789,7 @@ key_encode_test() ->
     ?assertEqual(
        <<"{\"foo\":1}">>,
        iolist_to_binary(encode({struct, [{"foo", 1}]}))),
-	?assertEqual(
+    ?assertEqual(
        <<"{\"foo\":1}">>,
        iolist_to_binary(encode([{foo, 1}]))),
     ?assertEqual(

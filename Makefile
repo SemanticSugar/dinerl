@@ -1,27 +1,24 @@
-PREFIX:=../
-DEST:=$(PREFIX)$(PROJECT)
+REBAR=rebar3
 
-REBAR=./rebar
+all: compile test edoc
 
-all:
-	@$(REBAR) get-deps compile
+compile:
+	@$(REBAR) compile
 
 edoc:
-	@$(REBAR) doc
+	@$(REBAR) edoc
 
-test:
-	@rm -rf .eunit
-	@mkdir -p .eunit
-	@$(REBAR) skip_deps=true eunit
+test: lint xref dialyzer
+	@$(REBAR) eunit
 
 clean:
 	@$(REBAR) clean
 
-build_plt:
-	@$(REBAR) build-plt
-
 dialyzer:
-	@$(REBAR) dialyze
+	@$(REBAR) dialyzer || $(REBAR) dialyzer
 
-app:
-	@$(REBAR) create template=mochiwebapp dest=$(DEST) appid=$(PROJECT)
+xref:
+	@$(REBAR) xref
+
+lint:
+	@$(REBAR) lint

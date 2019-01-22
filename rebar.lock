@@ -1,0 +1,12 @@
+[{<<"erliam">>,
+  {git,"https://github.com/AdRoll/erliam.git",
+       {ref,"a5b362f72cf95a085b0789e9a9af14d71adebbed"}},
+  0},
+ {<<"jiffy">>,
+  {git,"https://github.com/davisp/jiffy.git",
+       {ref,"06aaf440e091c9fd5f8aea557ac760a33bd37130"}},
+  1},
+ {<<"lhttpc">>,
+  {git,"git://github.com/ferd/lhttpc.git",
+       {ref,"28d5562be7e53576b624a6f82deac7303ce8f2dd"}},
+  0}].

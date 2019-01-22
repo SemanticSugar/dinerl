@@ -14,6 +14,7 @@
                   public_key,
                   ssl,
                   xmerl,
-                  erliam
+                  erliam,
+                  lhttpc
                  ]
   }]}.

@@ -5,6 +5,8 @@
 
 -export([call/5, call/6]).
 
+%% @todo Remove when lhttpc's specs are fixed
+-dialyzer({nowarn_function, [call/6, submit/4]}).
 
 -spec endpoint(zone()) -> endpoint().
 endpoint("us-east-1" ++ _R) -> "dynamodb.us-east-1.amazonaws.com";
@@ -25,7 +27,7 @@ region("eu-west-1" ++ _R) -> "eu-west-1".
 
 
 -spec call(awsv4:credentials(), zone(), string(),
-           aws_datetime(), any(), undefined | pos_integer()) -> result().
+           aws_datetime(), iolist(), undefined | pos_integer()) -> result().
 call(Credentials, Zone, Target, ISODate, Body, undefined) ->
     call(Credentials, Zone, Target, ISODate, Body, 1000);
 
@@ -47,7 +49,7 @@ call(Credentials, Zone, Target, RFCDate, Body) ->
     call(Credentials, Zone, Target, RFCDate, Body, 1000).
 
 
--spec submit(endpoint(), headers(), any(), integer()) -> result().
+-spec submit(endpoint(), headers(), iolist(), integer()) -> result().
 submit(Endpoint, Headers, Body, Timeout) ->
     %io:format("Request:~nHeaders:~p~nBody:~n~p~n~n", [Headers, iolist_to_binary(Body)]),
     case lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, [{max_connections, 10000}]) of
