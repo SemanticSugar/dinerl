@@ -59,11 +59,11 @@ api(Name) ->
 api(Name, Body) ->
     api(Name, Body, undefined).
 
--spec api(method(), any(), integer()) ->result().
+-spec api(method(), any(), undefined | integer()) ->result().
 api(Name, Body, Timeout) ->
     api(Name, Body, Timeout, undefined).
 
--spec api(method(), any(), integer(), undefined | string()) ->result().
+-spec api(method(), any(), undefined | integer(), undefined | string()) ->result().
 api(Name, Body, Timeout, Region) ->
     case catch(ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2)) of
         {'EXIT', {badarg, _}} ->

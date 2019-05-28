@@ -1,6 +1,6 @@
 [{<<"erliam">>,
   {git,"https://github.com/AdRoll/erliam.git",
-       {ref,"a5b362f72cf95a085b0789e9a9af14d71adebbed"}},
+       {ref,"868422a11751e203b926942a745653137ce9b0f2"}},
   0},
  {<<"jiffy">>,
   {git,"https://github.com/davisp/jiffy.git",
