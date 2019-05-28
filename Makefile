@@ -8,8 +8,8 @@ compile:
 edoc:
 	@$(REBAR) edoc
 
-test: lint xref dialyzer
-	@$(REBAR) eunit
+test:
+	@$(REBAR) test
 
 clean:
 	@$(REBAR) clean
