@@ -8,7 +8,7 @@ compile:
 edoc:
 	@$(REBAR) edoc
 
-test:
+test: dialyzer
 	@$(REBAR) test
 
 clean:
