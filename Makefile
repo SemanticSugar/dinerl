@@ -1,4 +1,4 @@
-REBAR=rebar3
+REBAR?=rebar3
 
 all: compile test edoc
 
@@ -8,7 +8,7 @@ compile:
 edoc:
 	@$(REBAR) edoc
 
-test:
+test: dialyzer
 	@$(REBAR) test
 
 clean:

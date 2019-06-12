@@ -1,0 +1,26 @@
+{
+  "repository": "git@github.com:SemanticSugar/dinerl",
+  "default_branch": "master",
+  "branch_configuration": "only-build-pull-requests",
+  "provider": {
+    "id": "github",
+    "webhook_url": "https://webhook.buildkite.com/deliver/bba16c6054b5104ca637f21a0612d4cb5fb9ac373c84355c9c",
+    "settings": {
+      "publish_commit_status": true,
+      "build_pull_requests": true,
+      "build_pull_request_forks": false,
+      "build_tags": false,
+      "publish_commit_status_per_step": false,
+      "repository": "SemanticSugar/dinerl",
+      "trigger_mode": "code"
+    }
+  },
+  "steps": [
+    {
+      "type": "script",
+      "name": "Start",
+      "command": "buildkite-agent pipeline upload .buildkite/pipelines/dinerl-pr-builder/start.yml",
+      "agent_query_rules": ["queue=rtb"]
+    }
+  ]
+}
