@@ -179,8 +179,6 @@ get_item(T, K, [{attrs, V}|Rest], Acc, Timeout, Region) ->
     get_item(T, K, Rest, [{<<"AttributesToGet">>, V} | Acc], Timeout, Region).
 
 
-
-
 get_items(Table, Keys, Options) ->
     do_get_items([{Table, Keys, Options}], [], undefined, undefined).
 get_items(Table, Keys, Options, Timeout) ->
@@ -196,7 +194,12 @@ do_get_items([], Acc, Timeout, Region) ->
     api(batch_get_item, [{<<"RequestItems">>, Acc}], Timeout, Region);
 do_get_items([{Table, Keys, Options}|Rest], Acc, Timeout, Region) ->
     Attrs = proplists:get_value(attrs, Options, []),
-    do_get_items(Rest, [{Table, [{<<"Keys">>, Keys}, {<<"AttributesToGet">>, Attrs}]} | Acc], Timeout, Region).
+    do_get_items(Rest, [get_body_request(Table, Keys, Attrs) | Acc], Timeout, Region).
+
+get_body_request(Table, Keys, []) ->
+    {Table, [{<<"Keys">>, Keys}]};
+get_body_request(Table, Keys, Attrs) ->
+    {Table, [{<<"Keys">>, Keys}, {<<"AttributesToGet">>, Attrs}]}.
 
 
 update_item_with_expression(TableName, Key, UpdateExpression) ->
