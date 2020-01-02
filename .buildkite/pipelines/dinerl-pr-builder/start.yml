@@ -1,7 +1,7 @@
 - label: 'Test Build'
   command:
     - if [ ! -z "$MERGE_BRANCH" ]; then git merge $MERGE_BRANCH -m "merging $MERGE_BRANCH"; fi
-    - curl https://s3.amazonaws.com/rebar3/rebar3 -o ./rebar3
+    - curl https://rebar3.s3.amazonaws.com/rebar3 -o ./rebar3
     - chmod +x rebar3
     - aws s3 sync s3://adroll-misc/rtb/dinerl/ . --exclude "*" --include "*.plt" --no-follow-symlinks
     - REBAR=./rebar3 make test
