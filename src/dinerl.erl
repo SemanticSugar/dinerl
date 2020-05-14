@@ -321,7 +321,9 @@ convert_query_parameters([{condition_expression, KeyConditionExpression} | Rest]
 convert_query_parameters([{filter_expression, KeyConditionExpression} | Rest], Acc) ->
     convert_query_parameters(Rest, [{<<"FilterExpression">>, KeyConditionExpression} | Acc]);
 convert_query_parameters([{expression_attribute_values, ExpressionAttributeValues} | Rest], Acc) ->
-    convert_query_parameters(Rest, [{<<"ExpressionAttributeValues">>, ExpressionAttributeValues} | Acc]).
+    convert_query_parameters(Rest, [{<<"ExpressionAttributeValues">>, ExpressionAttributeValues} | Acc]);
+convert_query_parameters([{expression_attribute_names, ExpressionAttributeNames} | Rest], Acc) ->
+    convert_query_parameters(Rest, [{<<"ExpressionAttributeNames">>, ExpressionAttributeNames} | Acc]).
 
 batch_write_item(TableName, PutItems, DeleteKeys) ->
     api(batch_write_item, [{<<"RequestItems">>, [
