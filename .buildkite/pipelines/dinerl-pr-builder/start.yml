@@ -5,7 +5,7 @@
     - chmod +x rebar3
     - ./rebar3 plugins upgrade rebar3_format
     - ./rebar3 format --verify
-    # - ./rebar3 dialyzer || true # avoid plt warnings
+    - ./rebar3 dialyzer || true # avoid plt warnings
     # - aws s3 sync s3://adroll-misc/rtb/dinerl/ . --exclude "*" --include "*plt" --no-follow-symlinks
     - ./rebar3 test
     - aws s3 sync . s3://adroll-misc/rtb/dinerl/ --exclude "*" --include "*plt" --no-follow-symlinks
