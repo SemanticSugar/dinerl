@@ -6,7 +6,7 @@
     - ./rebar3 plugins upgrade rebar3_format
     - ./rebar3 format --verify
     - aws s3 sync s3://adroll-misc/rtb/dinerl/ . --exclude "*" --include "*plt" --no-follow-symlinks
-    - ./rebar3 test
+    - ./rebar3 dialyzer || ./rebar3 test
     - aws s3 sync . s3://adroll-misc/rtb/dinerl/ --exclude "*" --include "*plt" --no-follow-symlinks
   agents:
     queue: 'rtb'
