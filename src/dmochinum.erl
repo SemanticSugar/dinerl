@@ -10,7 +10,9 @@
 %% Design and Implementation.
 
 -module(dmochinum).
+
 -author("Bob Ippolito <bob@mochimedia.com>").
+
 -export([digits/1, frexp/1, int_pow/2, int_ceil/1]).
 
 %% IEEE 754 Float exponent bias
@@ -62,25 +64,33 @@ int_pow(X, N) when N > 0 ->
 %%       trunc(F) + 1 when F &gt; 0.
 int_ceil(X) ->
     T = trunc(X),
-    case (X - T) of
-        Pos when Pos > 0 -> T + 1;
-        _ -> T
+    case X - T of
+        Pos when Pos > 0 ->
+            T + 1;
+        _ ->
+            T
     end.
-
 
 %% Internal API
 
 int_pow(X, N, R) when N < 2 ->
     R * X;
 int_pow(X, N, R) ->
-    int_pow(X * X, N bsr 1, case N band 1 of 1 -> R * X; 0 -> R end).
+    int_pow(X * X,
+            N bsr 1,
+            case N band 1 of
+                1 ->
+                    R * X;
+                0 ->
+                    R
+            end).
 
 insert_decimal(0, S) ->
     "0." ++ S;
 insert_decimal(Place, S) when Place > 0 ->
     L = length(S),
     case Place - L of
-         0 ->
+        0 ->
             S ++ ".0";
         N when N < 0 ->
             {S0, S1} = lists:split(L + N, S),
@@ -98,42 +108,39 @@ insert_decimal(Place, S) ->
 
 insert_decimal_exp(Place, S) ->
     [C | S0] = S,
-    S1 = case S0 of
-             [] ->
-                 "0";
-             _ ->
-                 S0
-         end,
-    Exp = case Place < 0 of
-              true ->
-                  "e-";
-              false ->
-                  "e+"
-          end,
+    S1 =
+        case S0 of
+            [] ->
+                "0";
+            _ ->
+                S0
+        end,
+    Exp =
+        case Place < 0 of
+            true ->
+                "e-";
+            false ->
+                "e+"
+        end,
     [C] ++ "." ++ S1 ++ Exp ++ integer_to_list(abs(Place - 1)).
 
-
 digits1(Float, Exp, Frac) ->
-    Round = ((Frac band 1) =:= 0),
+    Round = Frac band 1 =:= 0,
     case Exp >= 0 of
         true ->
             BExp = 1 bsl Exp,
-            case (Frac =/= ?BIG_POW) of
+            case Frac =/= ?BIG_POW of
                 true ->
-                    scale((Frac * BExp * 2), 2, BExp, BExp,
-                          Round, Round, Float);
+                    scale(Frac * BExp * 2, 2, BExp, BExp, Round, Round, Float);
                 false ->
-                    scale((Frac * BExp * 4), 4, (BExp * 2), BExp,
-                          Round, Round, Float)
+                    scale(Frac * BExp * 4, 4, BExp * 2, BExp, Round, Round, Float)
             end;
         false ->
-            case (Exp =:= ?MIN_EXP) orelse (Frac =/= ?BIG_POW) of
+            case Exp =:= ?MIN_EXP orelse Frac =/= ?BIG_POW of
                 true ->
-                    scale((Frac * 2), 1 bsl (1 - Exp), 1, 1,
-                          Round, Round, Float);
+                    scale(Frac * 2, 1 bsl (1 - Exp), 1, 1, Round, Round, Float);
                 false ->
-                    scale((Frac * 4), 1 bsl (2 - Exp), 2, 1,
-                          Round, Round, Float)
+                    scale(Frac * 4, 1 bsl (2 - Exp), 2, 1, Round, Round, Float)
             end
     end.
 
@@ -143,24 +150,23 @@ scale(R, S, MPlus, MMinus, LowOk, HighOk, Float) ->
     %% for int_pow(10, N) where we do not.
     case Est >= 0 of
         true ->
-            fixup(R, S * int_pow(10, Est), MPlus, MMinus, Est,
-                  LowOk, HighOk);
+            fixup(R, S * int_pow(10, Est), MPlus, MMinus, Est, LowOk, HighOk);
         false ->
             Scale = int_pow(10, -Est),
-            fixup(R * Scale, S, MPlus * Scale, MMinus * Scale, Est,
-                  LowOk, HighOk)
+            fixup(R * Scale, S, MPlus * Scale, MMinus * Scale, Est, LowOk, HighOk)
     end.
 
 fixup(R, S, MPlus, MMinus, K, LowOk, HighOk) ->
-    TooLow = case HighOk of
-                 true ->
-                     (R + MPlus) >= S;
-                 false ->
-                     (R + MPlus) > S
-             end,
+    TooLow =
+        case HighOk of
+            true ->
+                R + MPlus >= S;
+            false ->
+                R + MPlus > S
+        end,
     case TooLow of
         true ->
-            [(K + 1) | generate(R, S, MPlus, MMinus, LowOk, HighOk)];
+            [K + 1 | generate(R, S, MPlus, MMinus, LowOk, HighOk)];
         false ->
             [K | generate(R * 10, S, MPlus * 10, MMinus * 10, LowOk, HighOk)]
     end.
@@ -168,24 +174,25 @@ fixup(R, S, MPlus, MMinus, K, LowOk, HighOk) ->
 generate(R0, S, MPlus, MMinus, LowOk, HighOk) ->
     D = R0 div S,
     R = R0 rem S,
-    TC1 = case LowOk of
-              true ->
-                  R =< MMinus;
-              false ->
-                  R < MMinus
-          end,
-    TC2 = case HighOk of
-              true ->
-                  (R + MPlus) >= S;
-              false ->
-                  (R + MPlus) > S
-          end,
+    TC1 =
+        case LowOk of
+            true ->
+                R =< MMinus;
+            false ->
+                R < MMinus
+        end,
+    TC2 =
+        case HighOk of
+            true ->
+                R + MPlus >= S;
+            false ->
+                R + MPlus > S
+        end,
     case TC1 of
         false ->
             case TC2 of
                 false ->
-                    [D | generate(R * 10, S, MPlus * 10, MMinus * 10,
-                                  LowOk, HighOk)];
+                    [D | generate(R * 10, S, MPlus * 10, MMinus * 10, LowOk, HighOk)];
                 true ->
                     [D + 1]
             end;
@@ -211,8 +218,8 @@ frexp1({_Sign, 0, 0}) ->
     {0.0, 0};
 frexp1({Sign, 0, Frac}) ->
     Exp = log2floor(Frac),
-    <<Frac1:64/float>> = <<Sign:1, ?FLOAT_BIAS:11, (Frac-1):52>>,
-    {Frac1, -(?FLOAT_BIAS) - 52 + Exp};
+    <<Frac1:64/float>> = <<Sign:1, ?FLOAT_BIAS:11, (Frac - 1):52>>,
+    {Frac1, -?FLOAT_BIAS - 52 + Exp};
 frexp1({Sign, Exp, Frac}) ->
     <<Frac1:64/float>> = <<Sign:1, ?FLOAT_BIAS:11, Frac:52>>,
     {Frac1, Exp - ?FLOAT_BIAS}.
@@ -225,12 +232,10 @@ log2floor(0, N) ->
 log2floor(Int, N) ->
     log2floor(Int bsr 1, 1 + N).
 
-
 transform_digits(Place, [0 | Rest]) ->
     transform_digits(Place, Rest);
 transform_digits(Place, Digits) ->
     {Place, [$0 + D || D <- Digits]}.
-
 
 frexp_int(F) ->
     case unpack(F) of
@@ -244,6 +249,7 @@ frexp_int(F) ->
 %% Tests
 %%
 -ifdef(TEST).
+
 -include_lib("eunit/include/eunit.hrl").
 
 int_ceil_test() ->
@@ -265,57 +271,38 @@ int_pow_test() ->
     ok.
 
 digits_test() ->
-    ?assertEqual("0",
-                 digits(0)),
-    ?assertEqual("0.0",
-                 digits(0.0)),
-    ?assertEqual("1.0",
-                 digits(1.0)),
-    ?assertEqual("-1.0",
-                 digits(-1.0)),
-    ?assertEqual("0.1",
-                 digits(0.1)),
-    ?assertEqual("0.01",
-                 digits(0.01)),
-    ?assertEqual("0.001",
-                 digits(0.001)),
-    ?assertEqual("1.0e+6",
-                 digits(1000000.0)),
-    ?assertEqual("0.5",
-                 digits(0.5)),
-    ?assertEqual("4503599627370496.0",
-                 digits(4503599627370496.0)),
+    ?assertEqual("0", digits(0)),
+    ?assertEqual("0.0", digits(0.0)),
+    ?assertEqual("1.0", digits(1.0)),
+    ?assertEqual("-1.0", digits(-1.0)),
+    ?assertEqual("0.1", digits(0.1)),
+    ?assertEqual("0.01", digits(0.01)),
+    ?assertEqual("0.001", digits(0.001)),
+    ?assertEqual("1.0e+6", digits(1000000.0)),
+    ?assertEqual("0.5", digits(0.5)),
+    ?assertEqual("4503599627370496.0", digits(4503599627370496.0)),
     %% small denormalized number
     %% 4.94065645841246544177e-324 =:= 5.0e-324
-    <<SmallDenorm/float>> = <<0,0,0,0,0,0,0,1>>,
-    ?assertEqual("5.0e-324",
-                 digits(SmallDenorm)),
-    ?assertEqual(SmallDenorm,
-                 list_to_float(digits(SmallDenorm))),
+    <<SmallDenorm/float>> = <<0, 0, 0, 0, 0, 0, 0, 1>>,
+    ?assertEqual("5.0e-324", digits(SmallDenorm)),
+    ?assertEqual(SmallDenorm, list_to_float(digits(SmallDenorm))),
     %% large denormalized number
     %% 2.22507385850720088902e-308
-    <<BigDenorm/float>> = <<0,15,255,255,255,255,255,255>>,
-    ?assertEqual("2.225073858507201e-308",
-                 digits(BigDenorm)),
-    ?assertEqual(BigDenorm,
-                 list_to_float(digits(BigDenorm))),
+    <<BigDenorm/float>> = <<0, 15, 255, 255, 255, 255, 255, 255>>,
+    ?assertEqual("2.225073858507201e-308", digits(BigDenorm)),
+    ?assertEqual(BigDenorm, list_to_float(digits(BigDenorm))),
     %% small normalized number
     %% 2.22507385850720138309e-308
-    <<SmallNorm/float>> = <<0,16,0,0,0,0,0,0>>,
-    ?assertEqual("2.2250738585072014e-308",
-                 digits(SmallNorm)),
-    ?assertEqual(SmallNorm,
-                 list_to_float(digits(SmallNorm))),
+    <<SmallNorm/float>> = <<0, 16, 0, 0, 0, 0, 0, 0>>,
+    ?assertEqual("2.2250738585072014e-308", digits(SmallNorm)),
+    ?assertEqual(SmallNorm, list_to_float(digits(SmallNorm))),
     %% large normalized number
     %% 1.79769313486231570815e+308
-    <<LargeNorm/float>> = <<127,239,255,255,255,255,255,255>>,
-    ?assertEqual("1.7976931348623157e+308",
-                 digits(LargeNorm)),
-    ?assertEqual(LargeNorm,
-                 list_to_float(digits(LargeNorm))),
+    <<LargeNorm/float>> = <<127, 239, 255, 255, 255, 255, 255, 255>>,
+    ?assertEqual("1.7976931348623157e+308", digits(LargeNorm)),
+    ?assertEqual(LargeNorm, list_to_float(digits(LargeNorm))),
     %% issue #10 - mochinum:frexp(math:pow(2, -1074)).
-    ?assertEqual("5.0e-324",
-                 digits(math:pow(2, -1074))),
+    ?assertEqual("5.0e-324", digits(math:pow(2, -1074))),
     ok.
 
 frexp_test() ->
@@ -327,28 +314,22 @@ frexp_test() ->
     ?assertEqual({-0.5, 1}, frexp(-1.0)),
     %% small denormalized number
     %% 4.94065645841246544177e-324
-    <<SmallDenorm/float>> = <<0,0,0,0,0,0,0,1>>,
+    <<SmallDenorm/float>> = <<0, 0, 0, 0, 0, 0, 0, 1>>,
     ?assertEqual({0.5, -1073}, frexp(SmallDenorm)),
     %% large denormalized number
     %% 2.22507385850720088902e-308
-    <<BigDenorm/float>> = <<0,15,255,255,255,255,255,255>>,
-    ?assertEqual(
-       {0.99999999999999978, -1022},
-       frexp(BigDenorm)),
+    <<BigDenorm/float>> = <<0, 15, 255, 255, 255, 255, 255, 255>>,
+    ?assertEqual({0.99999999999999978, -1022}, frexp(BigDenorm)),
     %% small normalized number
     %% 2.22507385850720138309e-308
-    <<SmallNorm/float>> = <<0,16,0,0,0,0,0,0>>,
+    <<SmallNorm/float>> = <<0, 16, 0, 0, 0, 0, 0, 0>>,
     ?assertEqual({0.5, -1021}, frexp(SmallNorm)),
     %% large normalized number
     %% 1.79769313486231570815e+308
-    <<LargeNorm/float>> = <<127,239,255,255,255,255,255,255>>,
-    ?assertEqual(
-        {0.99999999999999989, 1024},
-        frexp(LargeNorm)),
+    <<LargeNorm/float>> = <<127, 239, 255, 255, 255, 255, 255, 255>>,
+    ?assertEqual({0.99999999999999989, 1024}, frexp(LargeNorm)),
     %% issue #10 - mochinum:frexp(math:pow(2, -1074)).
-    ?assertEqual(
-       {0.5, -1073},
-       frexp(math:pow(2, -1074))),
+    ?assertEqual({0.5, -1073}, frexp(math:pow(2, -1074))),
     ok.
 
 -endif.
