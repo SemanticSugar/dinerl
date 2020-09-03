@@ -1,4 +1,4 @@
-{"1.1.0",
+{"1.2.0",
 [{<<"erliam">>,
   {git,"https://github.com/AdRoll/erliam.git",
        {ref,"7c2f4d08c7119e70047e80005e54945a286ab10c"}},
@@ -10,5 +10,7 @@
   0}]}.
 [
 {pkg_hash,[
- {<<"jiffy">>, <<"72ADEFF75C52A2FF07DE738F0813768ABE7CE158026CC1115A170340259C0CAA">>}]}
+ {<<"jiffy">>, <<"72ADEFF75C52A2FF07DE738F0813768ABE7CE158026CC1115A170340259C0CAA">>}]},
+{pkg_hash_ext,[
+ {<<"jiffy">>, <<"113E5299EE4E6B9F40204256D7BBBD1CAF646EDEAEF31EF0F7F5F842C0DAD39E">>}]}
 ].
