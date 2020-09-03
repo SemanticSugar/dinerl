@@ -465,20 +465,19 @@ tokenize_string(B, S = #decoder{offset = O}, Acc) ->
             end;
         <<_:O/binary, C1, _/binary>> when C1 < 128 ->
             tokenize_string(B, ?INC_CHAR(S, C1), [C1 | Acc]);
-        <<_:O/binary, C1, C2, _/binary>> when C1 >= 194, C1 =< 223, C2 >= 128, C2 =< 191 ->
+        <<_:O/binary, C1, C2, _/binary>>
+            when C1 >= 194 andalso C1 =< 223, C2 >= 128 andalso C2 =< 191 ->
             tokenize_string(B, ?ADV_COL(S, 2), [C2, C1 | Acc]);
         <<_:O/binary, C1, C2, C3, _/binary>>
-            when C1 >= 224, C1 =< 239, C2 >= 128, C2 =< 191, C3 >= 128, C3 =< 191 ->
+            when C1 >= 224 andalso C1 =< 239,
+                 C2 >= 128 andalso C2 =< 191,
+                 C3 >= 128 andalso C3 =< 191 ->
             tokenize_string(B, ?ADV_COL(S, 3), [C3, C2, C1 | Acc]);
         <<_:O/binary, C1, C2, C3, C4, _/binary>>
-            when C1 >= 240,
-                 C1 =< 244,
-                 C2 >= 128,
-                 C2 =< 191,
-                 C3 >= 128,
-                 C3 =< 191,
-                 C4 >= 128,
-                 C4 =< 191 ->
+            when C1 >= 240 andalso C1 =< 244,
+                 C2 >= 128 andalso C2 =< 191,
+                 C3 >= 128 andalso C3 =< 191,
+                 C4 >= 128 andalso C4 =< 191 ->
             tokenize_string(B, ?ADV_COL(S, 4), [C4, C3, C2, C1 | Acc]);
         _ ->
             throw(invalid_utf8)
