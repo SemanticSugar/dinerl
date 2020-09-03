@@ -67,11 +67,9 @@ call(Credentials, Zone, Target, RFCDate, Body) ->
 
 -spec submit(endpoint(), headers(), iolist(), integer()) -> result().
 submit(Endpoint, Headers, Body, Timeout) ->
-    %io:format("Request:~nHeaders:~p~nBody:~n~p~n~n", [Headers, iolist_to_binary(Body)]),
-    case lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, [{max_connections, 10000}])
-        of
+    Opts = [{max_connections, 10000}],
+    case lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, Opts) of
         {ok, {{200, _}, _Headers, Response}} ->
-            %io:format("Response: ~p~n", [Response]),
             {ok, Response};
         {ok, {{400, Code}, _Headers, ErrorString}} ->
             {error, Code, ErrorString};
