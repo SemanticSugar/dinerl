@@ -108,20 +108,18 @@ insert_decimal(Place, S) ->
 
 insert_decimal_exp(Place, S) ->
     [C | S0] = S,
-    S1 =
-        case S0 of
-            [] ->
-                "0";
-            _ ->
-                S0
-        end,
-    Exp =
-        case Place < 0 of
-            true ->
-                "e-";
-            false ->
-                "e+"
-        end,
+    S1 = case S0 of
+             [] ->
+                 "0";
+             _ ->
+                 S0
+         end,
+    Exp = case Place < 0 of
+              true ->
+                  "e-";
+              false ->
+                  "e+"
+          end,
     [C] ++ "." ++ S1 ++ Exp ++ integer_to_list(abs(Place - 1)).
 
 digits1(Float, Exp, Frac) ->
@@ -174,20 +172,18 @@ fixup(R, S, MPlus, MMinus, K, LowOk, HighOk) ->
 generate(R0, S, MPlus, MMinus, LowOk, HighOk) ->
     D = R0 div S,
     R = R0 rem S,
-    TC1 =
-        case LowOk of
-            true ->
-                R =< MMinus;
-            false ->
-                R < MMinus
-        end,
-    TC2 =
-        case HighOk of
-            true ->
-                R + MPlus >= S;
-            false ->
-                R + MPlus > S
-        end,
+    TC1 = case LowOk of
+              true ->
+                  R =< MMinus;
+              false ->
+                  R < MMinus
+          end,
+    TC2 = case HighOk of
+              true ->
+                  R + MPlus >= S;
+              false ->
+                  R + MPlus > S
+          end,
     case TC1 of
         false ->
             case TC2 of

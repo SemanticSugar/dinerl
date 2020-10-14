@@ -59,7 +59,7 @@ api(Credentials, Zone, ISODate, Name, Body, Timeout) ->
                        ISODate,
                        dmochijson2:encode(Body),
                        Timeout)
-        of
+    of
         {ok, Response} ->
             {ok, dmochijson2:decode(Response)};
         {error, Code, Reason} ->

@@ -83,9 +83,7 @@
 %% @type utf8_option() = boolean(). Emit unicode as utf8 (default - false)
 encoder(Options) ->
     State = parse_encoder_options(Options, #encoder{}),
-    fun (O) ->
-            json_encode(O, State)
-    end.
+    fun(O) -> json_encode(O, State) end.
 
 %% @spec encode(json_term()) -> iolist()
 %% @doc Encode the given as JSON to an iolist.
@@ -97,9 +95,7 @@ encode(Any) ->
 %% @doc Create a decoder/1 with the given options.
 decoder(Options) ->
     State = parse_decoder_options(Options, #decoder{}),
-    fun (O) ->
-            json_decode(O, State)
-    end.
+    fun(O) -> json_decode(O, State) end.
 
 %% @spec decode(iolist(), [{format, proplist | eep18 | struct}]) -> json_term()
 %% @doc Decode the given iolist to Erlang terms using the given object format
@@ -166,21 +162,17 @@ json_encode(Bad, State = #encoder{handler = Handler}) ->
 json_encode_array([], _State) ->
     <<"[]">>;
 json_encode_array(L, State) ->
-    F =
-        fun (O, Acc) ->
-                [$,, json_encode(O, State) | Acc]
-        end,
+    F = fun(O, Acc) -> [$,, json_encode(O, State) | Acc] end,
     [$, | Acc1] = lists:foldl(F, "[", L),
     lists:reverse([$\] | Acc1]).
 
 json_encode_proplist([], _State) ->
     <<"{}">>;
 json_encode_proplist(Props, State) ->
-    F =
-        fun ({K, V}, Acc) ->
-                KS = json_encode_string(K, State),
-                VS = json_encode(V, State),
-                [$,, VS, $:, KS | Acc]
+    F = fun({K, V}, Acc) ->
+           KS = json_encode_string(K, State),
+           VS = json_encode(V, State),
+           [$,, VS, $:, KS | Acc]
         end,
     [$, | Acc1] = lists:foldl(F, "{", Props),
     lists:reverse([$\} | Acc1]).
@@ -457,10 +449,14 @@ tokenize_string(B, S = #decoder{offset = O}, Acc) ->
                     [CodePoint] =
                         xmerl_ucs:from_utf16be(<<C:16/big-unsigned-integer,
                                                  D:16/big-unsigned-integer>>),
-                    Acc1 = lists:reverse(xmerl_ucs:to_utf8(CodePoint), Acc),
+                    Acc1 =
+                        lists:reverse(
+                            xmerl_ucs:to_utf8(CodePoint), Acc),
                     tokenize_string(B, ?ADV_COL(S, 12), Acc1);
                 C ->
-                    Acc1 = lists:reverse(xmerl_ucs:to_utf8(C), Acc),
+                    Acc1 =
+                        lists:reverse(
+                            xmerl_ucs:to_utf8(C), Acc),
                     tokenize_string(B, ?ADV_COL(S, 6), Acc1)
             end;
         <<_:O/binary, C1, _/binary>> when C1 < 128 ->
@@ -596,10 +592,7 @@ obj_new() ->
     {struct, []}.
 
 is_obj({struct, Props}) ->
-    F =
-        fun ({K, _}) when is_binary(K) ->
-                true
-        end,
+    F = fun({K, _}) when is_binary(K) -> true end,
     lists:all(F, Props).
 
 obj_from_list(Props) ->
@@ -630,11 +623,7 @@ equiv_object(Props1, Props2) ->
     L1 = lists:keysort(1, Props1),
     L2 = lists:keysort(1, Props2),
     Pairs = lists:zip(L1, L2),
-    true =
-        lists:all(fun ({{K1, V1}, {K2, V2}}) ->
-                          equiv(K1, K2) and equiv(V1, V2)
-                  end,
-                  Pairs).
+    true = lists:all(fun({{K1, V1}, {K2, V2}}) -> equiv(K1, K2) and equiv(V1, V2) end, Pairs).
 
 %% Recursively compare tuple elements for equivalence.
 
@@ -712,34 +701,32 @@ input_validation_test() ->
         [{16#00A3, <<?Q, 16#C2, 16#A3, ?Q>>}, %% pound
          {16#20AC, <<?Q, 16#E2, 16#82, 16#AC, ?Q>>}, %% euro
          {16#10196, <<?Q, 16#F0, 16#90, 16#86, 16#96, ?Q>>}], %% denarius
-    lists:foreach(fun ({CodePoint, UTF8}) ->
-                          Expect = list_to_binary(xmerl_ucs:to_utf8(CodePoint)),
-                          Expect = decode(UTF8)
+    lists:foreach(fun({CodePoint, UTF8}) ->
+                     Expect = list_to_binary(xmerl_ucs:to_utf8(CodePoint)),
+                     Expect = decode(UTF8)
                   end,
                   Good),
 
-    Bad =
-        [%% 2nd, 3rd, or 4th byte of a multi-byte sequence w/o leading byte
-         <<?Q, 16#80, ?Q>>,
-         %% missing continuations, last byte in each should be 80-BF
-         <<?Q, 16#C2, 16#7F, ?Q>>,
-         <<?Q, 16#E0, 16#80, 16#7F, ?Q>>,
-         <<?Q, 16#F0, 16#80, 16#80, 16#7F, ?Q>>,
-         %% we don't support code points > 10FFFF per RFC 3629
-         <<?Q, 16#F5, 16#80, 16#80, 16#80, ?Q>>,
-         %% escape characters trigger a different code path
-         <<?Q, $\\, $\n, 16#80, ?Q>>],
-    lists:foreach(fun (X) ->
-                          ok =
-                              try
-                                  decode(X)
-                              catch
-                                  invalid_utf8 ->
-                                      ok
-                              end,
-                          %% could be {ucs,{bad_utf8_character_code}} or
-                          %%          {json_encode,{bad_char,_}}
-                          {'EXIT', _} = (catch encode(X))
+    Bad = [%% 2nd, 3rd, or 4th byte of a multi-byte sequence w/o leading byte
+           <<?Q, 16#80, ?Q>>,
+           %% missing continuations, last byte in each should be 80-BF
+           <<?Q, 16#C2, 16#7F, ?Q>>,
+           <<?Q, 16#E0, 16#80, 16#7F, ?Q>>,
+           <<?Q, 16#F0, 16#80, 16#80, 16#7F, ?Q>>,
+           %% we don't support code points > 10FFFF per RFC 3629
+           <<?Q, 16#F5, 16#80, 16#80, 16#80, ?Q>>,
+           %% escape characters trigger a different code path
+           <<?Q, $\\, $\n, 16#80, ?Q>>],
+    lists:foreach(fun(X) ->
+                     ok =
+                         try
+                             decode(X)
+                         catch
+                             invalid_utf8 -> ok
+                         end,
+                     %% could be {ucs,{bad_utf8_character_code}} or
+                     %%          {json_encode,{bad_char,_}}
+                     {'EXIT', _} = (catch encode(X))
                   end,
                   Bad).
 
@@ -758,10 +745,7 @@ big_unicode_test() ->
 
 custom_decoder_test() ->
     ?assertEqual({struct, [{<<"key">>, <<"value">>}]}, (decoder([]))("{\"key\": \"value\"}")),
-    F =
-        fun ({struct, [{<<"key">>, <<"value">>}]}) ->
-                win
-        end,
+    F = fun({struct, [{<<"key">>, <<"value">>}]}) -> win end,
     ?assertEqual(win, (decoder([{object_hook, F}]))("{\"key\": \"value\"}")),
     ok.
 
@@ -830,10 +814,7 @@ float_test() ->
 
 handler_test() ->
     ?assertEqual({'EXIT', {json_encode, {bad_term, {x, y}}}}, catch encode({x, y})),
-    F =
-        fun ({x, y}) ->
-                []
-        end,
+    F = fun({x, y}) -> [] end,
     ?assertEqual(<<"[]">>, iolist_to_binary((encoder([{handler, F}]))({x, y}))),
     ok.
 
