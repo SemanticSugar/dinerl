@@ -7,7 +7,7 @@
 -export([call/5, call/6]).
 
 %% @todo Remove when lhttpc's specs are fixed
--dialyzer({nowarn_function, [{call, 6}, {submit, 4}]}).
+-dialyzer({nowarn_function, [call/6, submit/4]}).
 
 -spec endpoint(zone()) -> endpoint().
 endpoint("us-east-1" ++ _R) ->
