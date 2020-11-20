@@ -389,8 +389,8 @@ batch_write_item(TableName, PutItems, DeleteKeys) ->
     api(batch_write_item,
         [{<<"RequestItems">>,
           [{TableName,
-            lists:map(fun make_batch_put/1, PutItems) ++
-                lists:map(fun make_batch_delete/1, DeleteKeys)}]}]).
+            lists:map(fun make_batch_put/1, PutItems)
+            ++ lists:map(fun make_batch_delete/1, DeleteKeys)}]}]).
 
 make_batch_put(Item) ->
     [{<<"PutRequest">>, [{<<"Item">>, Item}]}].
