@@ -4,7 +4,10 @@
   {vsn, "0.1"},
   {modules, []},
   {registered, []},
-  {env, []},
+  {env, [
+      {increment_stat_callback, {dinerl_util, noop}},
+      {histogram_stat_callback, {dinerl_util, noop}}
+  ]},
   {applications, [
                   kernel,
                   stdlib,

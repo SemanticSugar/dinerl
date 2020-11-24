@@ -51,8 +51,14 @@ call(Credentials, Zone, Target, RFCDate, Body) ->
 
 -spec submit(endpoint(), headers(), iolist(), integer()) -> result().
 submit(Endpoint, Headers, Body, Timeout) ->
-    %io:format("Request:~nHeaders:~p~nBody:~n~p~n~n", [Headers, iolist_to_binary(Body)]),
-    case lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, [{max_connections, 10000}]) of
+
+    dinerl_util:increment([dinerl, dynamodb, call, [{endpoint, Endpoint}]]),
+    io:format(user, "Body ~p",[Body]),
+    case dinerl_util:time_call([dinerl, dynamodb, call, time],
+        fun() ->
+            lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, [{max_connections, 10000}])
+        end)
+    of
         {ok, {{200, _}, _Headers, Response}} ->
             %io:format("Response: ~p~n", [Response]),
             {ok, Response};
