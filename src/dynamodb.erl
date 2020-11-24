@@ -70,7 +70,7 @@ submit(Host, Headers, Body, Timeout) when is_list(Host) ->
     Opts = [{max_connections, 10000}],
     Endpoint = "http://" ++ Host ++ "/",
     dinerl_util:increment([dinerl, dynamodb, call, {host, list_to_atom(Host)}]),
-    case httpc:request(Endpoint, "POST", Headers, Body, Timeout, Opts) of
+    case lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, Opts) of
         {ok, {{200, _}, _Headers, Response}} ->
             {ok, Response};
         {ok, {{400, Code}, _Headers, ErrorString}} ->
