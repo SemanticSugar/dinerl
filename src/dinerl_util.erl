@@ -1,12 +1,6 @@
 -module(dinerl_util).
 
--export([
-    noop/2,
-    time_call/2,
-    time_call/3,
-    increment/1,
-    increment/2
-]).
+-export([noop/2, time_call/2, time_call/3, increment/1, increment/2]).
 
 %%%===================================================================
 %%% API
@@ -39,7 +33,6 @@ time_call(Metric, Fun, Ratio) when is_number(Ratio) ->
             ok
     end,
     Result.
-
 
 histogram(Metric, Value) ->
     {StatMod, StatFun} = histogram_stat_callback(),

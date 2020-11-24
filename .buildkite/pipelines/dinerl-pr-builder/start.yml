@@ -3,8 +3,11 @@
     - if [ ! -z "$MERGE_BRANCH" ]; then git merge $MERGE_BRANCH -m "merging $MERGE_BRANCH"; fi
     - curl https://rebar3.s3.amazonaws.com/rebar3 -o ./rebar3
     - chmod +x rebar3
+    - ./rebar3 plugins upgrade rebar3_format
+    - ./rebar3 format --verify
     - aws s3 sync s3://adroll-misc/rtb/dinerl/ . --exclude "*" --include "*plt" --no-follow-symlinks
-    - REBAR=./rebar3 make test
+    - ./rebar3 dialyzer || true
+    - ./rebar3 test
     - aws s3 sync . s3://adroll-misc/rtb/dinerl/ --exclude "*" --include "*plt" --no-follow-symlinks
   agents:
     queue: 'rtb'
