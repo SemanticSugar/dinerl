@@ -66,10 +66,10 @@ call(Credentials, Zone, Target, RFCDate, Body) ->
     call(Credentials, Zone, Target, RFCDate, Body, 1000).
 
 -spec submit(endpoint(), headers(), iolist(), integer()) -> result().
-submit(Host, Headers, Body, Timeout) ->
+submit(Host, Headers, Body, Timeout) when is_list(Host) ->
     Opts = [{max_connections, 10000}],
     Endpoint = "http://" ++ Host ++ "/",
-    dinerl_util:increment([dinerl, dynamodb, call]),
+    dinerl_util:increment([dinerl, dynamodb, call, {host, list_to_atom(Host)}]),
     case httpc:request(Endpoint, "POST", Headers, Body, Timeout, Opts) of
         {ok, {{200, _}, _Headers, Response}} ->
             {ok, Response};
