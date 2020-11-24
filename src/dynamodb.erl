@@ -57,7 +57,7 @@ call(Credentials, Zone, Target, ISODate, Body, Timeout) ->
                         host => Host,
                         region => region(Zone)},
                       Body),
-    submit("http://" ++ Host ++ "/",
+    submit(Host,
            [{"content-type", "application/x-amz-json-1.0"} | Headers],
            Body,
            Timeout).
@@ -66,8 +66,9 @@ call(Credentials, Zone, Target, RFCDate, Body) ->
     call(Credentials, Zone, Target, RFCDate, Body, 1000).
 
 -spec submit(endpoint(), headers(), iolist(), integer()) -> result().
-submit(Endpoint, Headers, Body, Timeout) ->
-    dinerl_util:increment([dinerl, dynamodb, call, [{endpoint, Endpoint}]]),
+submit(Host, Headers, Body, Timeout) ->
+    Endpoint = "http://" ++ Host ++ "/",
+    dinerl_util:increment([dinerl, dynamodb, call, [{endpoint, list_to_atom(Host)}]]),
     case dinerl_util:time_call([dinerl, dynamodb, call, time],
                                fun() ->
                                   Opts = [{max_connections, 10000}],
