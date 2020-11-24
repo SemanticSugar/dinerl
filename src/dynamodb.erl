@@ -68,7 +68,6 @@ call(Credentials, Zone, Target, RFCDate, Body) ->
 -spec submit(endpoint(), headers(), iolist(), integer()) -> result().
 submit(Endpoint, Headers, Body, Timeout) ->
     dinerl_util:increment([dinerl, dynamodb, call, [{endpoint, Endpoint}]]),
-    io:format(user, "Body ~p", [Body]),
     case dinerl_util:time_call([dinerl, dynamodb, call, time],
                                fun() ->
                                   Opts = [{max_connections, 10000}],
