@@ -70,17 +70,24 @@ submit(Host, Headers, Body, Timeout) when is_list(Host) ->
     Opts = [{max_connections, 10000}],
     Endpoint = "http://" ++ Host ++ "/",
     dinerl_util:increment([dinerl, dynamodb, call, {host, list_to_atom(Host)}]),
-    case lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, Opts) of
+    F = fun() -> lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, Opts) end,
+    case dinerl_util:time_call([dinerl, dynamodb, call, time], F) of
         {ok, {{200, _}, _Headers, Response}} ->
+            dinerl_util:increment([dinerl, dynamodb, call, result, {host, list_to_atom(Host)}, {result, ok}]),
             {ok, Response};
         {ok, {{400, Code}, _Headers, ErrorString}} ->
+            dinerl_util:increment([dinerl, dynamodb, call, result, {host, list_to_atom(Host)}, {result, '400'}]),
             {error, Code, ErrorString};
         {ok, {{413, Code}, _Headers, ErrorString}} ->
+            dinerl_util:increment([dinerl, dynamodb, call, result, {host, list_to_atom(Host)}, {result, '413'}]),
             {error, Code, ErrorString};
         {ok, {{500, Code}, _Headers, ErrorString}} ->
+            dinerl_util:increment([dinerl, dynamodb, call, result, {host, list_to_atom(Host)}, {result, '500'}]),
             {error, Code, ErrorString};
         {error, Reason} ->
+            dinerl_util:increment([dinerl, dynamodb, call, result, {host, list_to_atom(Host)}, {result, error}]),
             {error, unknown, Reason};
         Other ->
+            dinerl_util:increment([dinerl, dynamodb, call, result, {host, list_to_atom(Host)}, {result, unknown}]),
             {error, response, Other}
     end.
