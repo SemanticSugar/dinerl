@@ -57,10 +57,7 @@ call(Credentials, Zone, Target, ISODate, Body, Timeout) ->
                         host => Host,
                         region => region(Zone)},
                       Body),
-    submit(Host,
-           [{"content-type", "application/x-amz-json-1.0"} | Headers],
-           Body,
-           Timeout).
+    submit(Host, [{"content-type", "application/x-amz-json-1.0"} | Headers], Body, Timeout).
 
 call(Credentials, Zone, Target, RFCDate, Body) ->
     call(Credentials, Zone, Target, RFCDate, Body, 1000).
@@ -73,21 +70,51 @@ submit(Host, Headers, Body, Timeout) when is_list(Host) ->
     F = fun() -> lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, Opts) end,
     case dinerl_util:time_call([dinerl, dynamodb, call, time, list_to_atom(Host)], F) of
         {ok, {{200, _}, _Headers, Response}} ->
-            dinerl_util:increment([dinerl, dynamodb, call, result, {host, list_to_atom(Host)}, {result, ok}]),
+            dinerl_util:increment([dinerl,
+                                   dynamodb,
+                                   call,
+                                   result,
+                                   {host, list_to_atom(Host)},
+                                   {result, ok}]),
             {ok, Response};
         {ok, {{400, Code}, _Headers, ErrorString}} ->
-            dinerl_util:increment([dinerl, dynamodb, call, result, {host, list_to_atom(Host)}, {result, '400'}]),
+            dinerl_util:increment([dinerl,
+                                   dynamodb,
+                                   call,
+                                   result,
+                                   {host, list_to_atom(Host)},
+                                   {result, '400'}]),
             {error, Code, ErrorString};
         {ok, {{413, Code}, _Headers, ErrorString}} ->
-            dinerl_util:increment([dinerl, dynamodb, call, result, {host, list_to_atom(Host)}, {result, '413'}]),
+            dinerl_util:increment([dinerl,
+                                   dynamodb,
+                                   call,
+                                   result,
+                                   {host, list_to_atom(Host)},
+                                   {result, '413'}]),
             {error, Code, ErrorString};
         {ok, {{500, Code}, _Headers, ErrorString}} ->
-            dinerl_util:increment([dinerl, dynamodb, call, result, {host, list_to_atom(Host)}, {result, '500'}]),
+            dinerl_util:increment([dinerl,
+                                   dynamodb,
+                                   call,
+                                   result,
+                                   {host, list_to_atom(Host)},
+                                   {result, '500'}]),
             {error, Code, ErrorString};
         {error, Reason} ->
-            dinerl_util:increment([dinerl, dynamodb, call, result, {host, list_to_atom(Host)}, {result, error}]),
+            dinerl_util:increment([dinerl,
+                                   dynamodb,
+                                   call,
+                                   result,
+                                   {host, list_to_atom(Host)},
+                                   {result, error}]),
             {error, unknown, Reason};
         Other ->
-            dinerl_util:increment([dinerl, dynamodb, call, result, {host, list_to_atom(Host)}, {result, unknown}]),
+            dinerl_util:increment([dinerl,
+                                   dynamodb,
+                                   call,
+                                   result,
+                                   {host, list_to_atom(Host)},
+                                   {result, unknown}]),
             {error, response, Other}
     end.
