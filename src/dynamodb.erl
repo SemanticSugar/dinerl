@@ -64,7 +64,8 @@ call(Credentials, Zone, Target, RFCDate, Body) ->
 
 -spec submit(endpoint(), headers(), iolist(), integer()) -> result().
 submit(Host, Headers, Body, Timeout) when is_list(Host) ->
-    Opts = [{max_connections, 10000}],
+    MaxConnections = dinerl_util:get_env(max_connections),
+    Opts = [{max_connections, MaxConnections}],
     Endpoint = "http://" ++ Host ++ "/",
     dinerl_util:increment([dinerl, dynamodb, call, {endpoint, list_to_atom(Host)}]),
     F = fun() -> lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, Opts) end,
