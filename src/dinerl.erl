@@ -307,7 +307,8 @@ update_item(T, K, [{return, updated_new} | Rest], Acc, Timeout) ->
     update_item(T, K, Rest, [{<<"ReturnValues">>, ?UPDATED_NEW} | Acc], Timeout).
 
 %% query_item options:
-%% Uses amazon api version: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/API_Query_v20111205.html
+%% Uses amazon api version:
+%% http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/API_Query_v20111205.html
 %% limit: int, max number of results
 %% count: bool, only return the total count
 %% scan_index_forward: bool, set to false to reverse the sort order

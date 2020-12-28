@@ -1,6 +1,6 @@
 -module(dinerl_util).
 
--export([noop/2, time_call/2, time_call/3, increment/1, increment/2]).
+-export([get_env/1, noop/2, time_call/2, time_call/3, increment/1, increment/2]).
 
 %%%===================================================================
 %%% API
@@ -48,6 +48,14 @@ increment(Metric, Value) ->
 noop(_Key, _Value) ->
     ok.
 
+get_env(Key) ->
+    case application:get_env(dinerl, Key) of
+        {ok, Value} ->
+            Value;
+        undefined ->
+            exit({undefined_configuration, Key})
+    end.
+
 %%%===================================================================
 %%% Internal Functions
 %%%===================================================================
@@ -56,11 +64,3 @@ histogram_stat_callback() ->
 
 increment_stat_callback() ->
     get_env(increment_stat_callback).
-
-get_env(Key) ->
-    case application:get_env(dinerl, Key) of
-        {ok, Value} ->
-            Value;
-        undefined ->
-            exit({undefined_configuration, Key})
-    end.

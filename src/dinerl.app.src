@@ -6,7 +6,8 @@
   {registered, []},
   {env, [
       {increment_stat_callback, {dinerl_util, noop}},
-      {histogram_stat_callback, {dinerl_util, noop}}
+      {histogram_stat_callback, {dinerl_util, noop}},
+      {max_connections, 10000}
   ]},
   {applications, [
                   kernel,

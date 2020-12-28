@@ -64,7 +64,8 @@ call(Credentials, Zone, Target, RFCDate, Body) ->
 
 -spec submit(endpoint(), headers(), iolist(), integer()) -> result().
 submit(Host, Headers, Body, Timeout) when is_list(Host) ->
-    Opts = [{max_connections, 10000}],
+    MaxConnections = dinerl_util:get_env(max_connections),
+    Opts = [{max_connections, MaxConnections}],
     Endpoint = "http://" ++ Host ++ "/",
     dinerl_util:increment([dinerl, dynamodb, call, {endpoint, list_to_atom(Host)}]),
     F = fun() -> lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, Opts) end,
@@ -74,7 +75,7 @@ submit(Host, Headers, Body, Timeout) when is_list(Host) ->
                                    dynamodb,
                                    call,
                                    result,
-                                   {host, list_to_atom(Host)},
+                                   {endpoint, list_to_atom(Host)},
                                    {result, ok}]),
             {ok, Response};
         {ok, {{400, Code}, _Headers, ErrorString}} ->
@@ -82,7 +83,7 @@ submit(Host, Headers, Body, Timeout) when is_list(Host) ->
                                    dynamodb,
                                    call,
                                    result,
-                                   {host, list_to_atom(Host)},
+                                   {endpoint, list_to_atom(Host)},
                                    {result, '400'}]),
             {error, Code, ErrorString};
         {ok, {{413, Code}, _Headers, ErrorString}} ->
@@ -90,7 +91,7 @@ submit(Host, Headers, Body, Timeout) when is_list(Host) ->
                                    dynamodb,
                                    call,
                                    result,
-                                   {host, list_to_atom(Host)},
+                                   {endpoint, list_to_atom(Host)},
                                    {result, '413'}]),
             {error, Code, ErrorString};
         {ok, {{500, Code}, _Headers, ErrorString}} ->
@@ -98,7 +99,7 @@ submit(Host, Headers, Body, Timeout) when is_list(Host) ->
                                    dynamodb,
                                    call,
                                    result,
-                                   {host, list_to_atom(Host)},
+                                   {endpoint, list_to_atom(Host)},
                                    {result, '500'}]),
             {error, Code, ErrorString};
         {error, Reason} ->
@@ -106,7 +107,7 @@ submit(Host, Headers, Body, Timeout) when is_list(Host) ->
                                    dynamodb,
                                    call,
                                    result,
-                                   {host, list_to_atom(Host)},
+                                   {endpoint, list_to_atom(Host)},
                                    {result, error}]),
             {error, unknown, Reason};
         Other ->
@@ -114,7 +115,7 @@ submit(Host, Headers, Body, Timeout) when is_list(Host) ->
                                    dynamodb,
                                    call,
                                    result,
-                                   {host, list_to_atom(Host)},
+                                   {endpoint, list_to_atom(Host)},
                                    {result, unknown}]),
             {error, response, Other}
     end.
