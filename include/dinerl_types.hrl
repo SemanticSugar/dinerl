@@ -39,11 +39,6 @@
         {<<"RangeKeyElement">>, [{<<"AttributeName">>, N}, {<<"AttributeType">>, T}]}).
 -define(HASHKEY(N, V), {<<"HashKeyElement">>, [V]}).
 -define(RANGEKEY(N, V), {<<"RangeKeyElement">>, [V]}).
--define(NONE, <<"NONE">>).
--define(ALL_OLD, <<"ALL_OLD">>).
--define(UPDATED_OLD, <<"UPDATED_OLD">>).
--define(ALL_NEW, <<"ALL_NEW">>).
--define(UPDATED_NEW, <<"UPDATED_NEW">>).
 
 %% Attributes in Responses: {"AttributeName4":{"AttributeType":"AttributeValue"}}
 %% Expected Field: {"AttributeName3":{"Value":{"AttributeType":"AttributeValue3"}, "Exists": "true"}}

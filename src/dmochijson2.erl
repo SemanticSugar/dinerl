@@ -50,10 +50,6 @@
         S#decoder{offset = N + S#decoder.offset, column = N + S#decoder.column}).
 -define(INC_COL(S),
         S#decoder{offset = 1 + S#decoder.offset, column = 1 + S#decoder.column}).
--define(INC_LINE(S),
-        S#decoder{offset = 1 + S#decoder.offset,
-                  column = 1,
-                  line = 1 + S#decoder.line}).
 -define(INC_CHAR(S, C),
         case C of
             $\n ->

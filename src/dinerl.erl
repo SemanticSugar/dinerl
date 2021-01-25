@@ -4,6 +4,11 @@
 
 -define(DINERL_DATA, dinerl_data).
 -define(ARGS_KEY, args).
+-define(NONE, <<"NONE">>).
+-define(ALL_OLD, <<"ALL_OLD">>).
+-define(UPDATED_OLD, <<"UPDATED_OLD">>).
+-define(ALL_NEW, <<"ALL_NEW">>).
+-define(UPDATED_NEW, <<"UPDATED_NEW">>).
 
 -include("dinerl_types.hrl").
 
