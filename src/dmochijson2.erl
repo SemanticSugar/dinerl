@@ -717,7 +717,8 @@ input_validation_test() ->
                          try
                              decode(X)
                          catch
-                             invalid_utf8 -> ok
+                             invalid_utf8 ->
+                                 ok
                          end,
                      %% could be {ucs,{bad_utf8_character_code}} or
                      %%          {json_encode,{bad_char,_}}
