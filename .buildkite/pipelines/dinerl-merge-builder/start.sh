@@ -4,7 +4,7 @@ set -ue
 root=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )/../..
 . ${root}/pipelines/common.sh
 
-if [ "${BUILDKITE_BRANCH}" = "master" ]; then
+if [ "${BUILDKITE_BRANCH}" = "main" ]; then
 cat <<EOF
 - label: "Trigger builds"
   agents:
@@ -12,7 +12,7 @@ cat <<EOF
   command:
     - "echo Triggering builds"
 EOF
-  # If the pipeline was triggered because of a push to master, we want to
+  # If the pipeline was triggered because of a push to main, we want to
   # rebuild all the pull requests to see if they will still work with these
   # new changes (merge + checks + tests).
   #
@@ -57,5 +57,5 @@ EOF
   done
 else
   # Read the pipeline and output replacing variables
-  sed -e "s/\$MERGE_BRANCH/master/g" ${root}/pipelines/dinerl-pr-builder/start.yml
+  sed -e "s/\$MERGE_BRANCH/main/g" ${root}/pipelines/dinerl-pr-builder/start.yml
 fi

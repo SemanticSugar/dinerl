@@ -1,7 +1,7 @@
 {
   "repository": "git@github.com:SemanticSugar/dinerl",
-  "default_branch": "master",
-  "branch_configuration": "master",
+  "default_branch": "main",
+  "branch_configuration": "main",
   "provider": {
     "id": "github",
     "webhook_url": "https://webhook.buildkite.com/deliver/3e195dcc581ba7b2f1aebe4d9c3c619966c36d52e345463356",
