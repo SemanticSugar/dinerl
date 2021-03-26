@@ -1,6 +1,6 @@
 {
   "repository": "git@github.com:SemanticSugar/dinerl",
-  "default_branch": "master",
+  "default_branch": "main",
   "branch_configuration": "only-build-pull-requests",
   "provider": {
     "id": "github",
