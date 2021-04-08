@@ -1,7 +1,7 @@
 -module(dinerl_util).
 
 %% Because noop/2 is used as a stat_callback
--hank([unused_ignored_function_params]).
+-hank([{unnecessary_function_arguments, [noop]}]).
 
 -export([get_env/1, noop/2, time_call/2, time_call/3, increment/1, increment/2]).
 
