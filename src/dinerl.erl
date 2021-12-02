@@ -64,9 +64,11 @@ api(Name, Body) ->
 api(Name, Body, Timeout) ->
     api(Name, Body, Timeout, undefined).
 
--spec api(method(), any(), undefined | integer(), undefined | zone()) -> result().
+-spec api(method(), any(), undefined | integer(), undefined | string()) -> result().
 api(Name, Body, Timeout, Region) ->
     case catch ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2) of
+        {'EXIT', {badarg, _}} ->
+            {error, missing_credentials, ""};
         {Credentials, Zone, Date} ->
             TargetRegion =
                 case Region of
