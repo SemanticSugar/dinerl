@@ -41,7 +41,7 @@ region("eu-west-1" ++ _R) ->
            zone(),
            string(),
            aws_datetime(),
-           iolist(),
+           iodata(),
            undefined | pos_integer()) ->
               result().
 call(Credentials, Zone, Target, ISODate, Body, undefined) ->
@@ -62,7 +62,7 @@ call(Credentials, Zone, Target, ISODate, Body, Timeout) ->
 call(Credentials, Zone, Target, RFCDate, Body) ->
     call(Credentials, Zone, Target, RFCDate, Body, 1000).
 
--spec submit(endpoint(), headers(), iolist(), integer()) -> result().
+-spec submit(endpoint(), headers(), iodata(), integer()) -> result().
 submit(Host, Headers, Body, Timeout) when is_list(Host) ->
     MaxConnections = dinerl_util:get_env(max_connections),
     Opts = [{max_connections, MaxConnections}],
