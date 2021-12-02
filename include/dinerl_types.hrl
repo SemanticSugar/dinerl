@@ -28,7 +28,10 @@
     query_item_20111205 |
     query_item_20120810.
 -type result() ::
-    {ok, any()} | {error, string(), string()} | {error, term(), timeout | string()}.
+    {ok, any()} |
+    {error, string(), string()} |
+    {error, term(), timeout | string()} |
+    {error, atom(), any()}.
 -type header() :: {string() | atom(), string()}.
 -type headers() :: [header()].
 -type attribute() :: {string(), {s | n, string()}} | {string(), {ns | ss, [string()]}}.
