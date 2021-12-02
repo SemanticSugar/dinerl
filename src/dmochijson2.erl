@@ -66,14 +66,14 @@
 -type json_array() :: [json_term()].
 -type json_object() :: {struct, [{json_string(), json_term()}]}.
 -type json_eep18_object() :: {[{json_string(), json_term()}]}.
--type json_iolist() :: {json, iolist()}.
+-type json_iodata() :: {json, iodata()}.
 -type json_term() ::
     json_string() |
     json_number() |
     json_array() |
     json_object() |
     json_eep18_object() |
-    json_iolist().
+    json_iodata().
 
 -record(encoder, {handler = null, utf8 = false}).
 -record(decoder, {object_hook = null, offset = 0, line = 1, column = 1, state = null}).
@@ -86,9 +86,9 @@ encoder(Options) ->
     State = parse_encoder_options(Options, #encoder{}),
     fun(O) -> json_encode(O, State) end.
 
-%% @spec encode(json_term()) -> iolist()
-%% @doc Encode the given as JSON to an iolist.
--spec encode(json_term()) -> iolist().
+%% @spec encode(json_term()) -> iodata()
+%% @doc Encode the given as JSON to an iodata.
+-spec encode(json_term()) -> iodata().
 encode(Any) ->
     json_encode(Any, #encoder{}).
 
@@ -98,16 +98,16 @@ decoder(Options) ->
     State = parse_decoder_options(Options, #decoder{}),
     fun(O) -> json_decode(O, State) end.
 
-%% @spec decode(iolist(), [{format, proplist | eep18 | struct}]) -> json_term()
-%% @doc Decode the given iolist to Erlang terms using the given object format
+%% @spec decode(iodata(), [{format, proplist | eep18 | struct}]) -> json_term()
+%% @doc Decode the given iodata to Erlang terms using the given object format
 %%      for decoding, where proplist returns JSON objects as [{binary(), json_term()}]
 %%      proplists, eep18 returns JSON objects as {[binary(), json_term()]}, and struct
 %%      returns them as-is.
 decode(S, Options) ->
     json_decode(S, parse_decoder_options(Options, #decoder{})).
 
-%% @spec decode(iolist()) -> json_term()
-%% @doc Decode the given iolist to Erlang terms.
+%% @spec decode(iodata()) -> json_term()
+%% @doc Decode the given iodata to Erlang terms.
 decode(S) ->
     json_decode(S, #decoder{}).
 
