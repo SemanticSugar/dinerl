@@ -415,7 +415,7 @@ tokenize_string_fast(B, O) ->
                  C3 >= 128 andalso C3 =< 191, C4 >= 128 andalso C4 =< 191 ->
             tokenize_string_fast(B, 4 + O);
         _ ->
-            throw(invalid_utf8)
+            error(invalid_utf8)
     end.
 
 tokenize_string(B, S = #decoder{offset = O}, Acc) ->
@@ -471,7 +471,7 @@ tokenize_string(B, S = #decoder{offset = O}, Acc) ->
                  C3 >= 128 andalso C3 =< 191, C4 >= 128 andalso C4 =< 191 ->
             tokenize_string(B, ?ADV_COL(S, 4), [C4, C3, C2, C1 | Acc]);
         _ ->
-            throw(invalid_utf8)
+            error(invalid_utf8)
     end.
 
 tokenize_number(B, S) ->
@@ -717,12 +717,18 @@ input_validation_test() ->
                          try
                              decode(X)
                          catch
-                             invalid_utf8 ->
+                             _:invalid_utf8 ->
                                  ok
                          end,
-                     %% could be {ucs,{bad_utf8_character_code}} or
-                     %%          {json_encode,{bad_char,_}}
-                     {'EXIT', _} = (catch encode(X))
+                     try encode(X) of
+                         Result ->
+                             exit({unexpected_result, Result})
+                     catch
+                         _:Error ->
+                             %% could be {ucs,{bad_utf8_character_code}} or
+                             %%          {json_encode,{bad_char,_}}
+                             ?assert(is_tuple(Error))
+                     end
                   end,
                   Bad).
 
@@ -747,11 +753,11 @@ custom_decoder_test() ->
 
 atom_test() ->
     %% JSON native atoms
-    [begin
-         ?assertEqual(A, decode(atom_to_list(A))),
-         ?assertEqual(iolist_to_binary(atom_to_list(A)), iolist_to_binary(encode(A)))
-     end
-     || A <- [true, false, null]],
+    lists:foreach(fun(A) ->
+                     ?assertEqual(A, decode(atom_to_list(A))),
+                     ?assertEqual(iolist_to_binary(atom_to_list(A)), iolist_to_binary(encode(A)))
+                  end,
+                  [true, false, null]),
     %% Atom to string
     ?assertEqual(<<"\"foo\"">>, iolist_to_binary(encode(foo))),
     ?assertEqual(<<"\"\\ud834\\udd20\"">>,
@@ -774,12 +780,12 @@ key_encode_test() ->
 
 unsafe_chars_test() ->
     Chars = "\"\\\b\f\n\r\t",
-    [begin
-         ?assertEqual(false, json_string_is_safe([C])),
-         ?assertEqual(false, json_bin_is_safe(<<C>>)),
-         ?assertEqual(<<C>>, decode(encode(<<C>>)))
-     end
-     || C <- Chars],
+    lists:foreach(fun(C) ->
+                     ?assertEqual(false, json_string_is_safe([C])),
+                     ?assertEqual(false, json_bin_is_safe(<<C>>)),
+                     ?assertEqual(<<C>>, decode(encode(<<C>>)))
+                  end,
+                  Chars),
     ?assertEqual(false, json_string_is_safe([16#0001d120])),
     ?assertEqual(false, json_bin_is_safe(list_to_binary(xmerl_ucs:to_utf8(16#0001d120)))),
     ?assertEqual([16#0001d120],
@@ -809,7 +815,7 @@ float_test() ->
     ok.
 
 handler_test() ->
-    ?assertEqual({'EXIT', {json_encode, {bad_term, {x, y}}}}, catch encode({x, y})),
+    ?assertExit({json_encode, {bad_term, {x, y}}}, encode({x, y})),
     F = fun({x, y}) -> [] end,
     ?assertEqual(<<"[]">>, iolist_to_binary((encoder([{handler, F}]))({x, y}))),
     ok.

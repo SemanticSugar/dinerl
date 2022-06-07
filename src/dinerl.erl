@@ -66,9 +66,7 @@ api(Name, Body, Timeout) ->
 
 -spec api(method(), any(), undefined | integer(), undefined | zone()) -> result().
 api(Name, Body, Timeout, Region) ->
-    case catch ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2) of
-        {'EXIT', {badarg, _}} ->
-            {error, missing_credentials, ""};
+    try ets:lookup_element(?DINERL_DATA, ?ARGS_KEY, 2) of
         {Credentials, Zone, Date} ->
             TargetRegion =
                 case Region of
@@ -78,6 +76,9 @@ api(Name, Body, Timeout, Region) ->
                         Region
                 end,
             dinerl_client:api(Credentials, TargetRegion, Date, Name, Body, Timeout)
+    catch
+        _:{badarg, _} ->
+            {error, missing_credentials, ""}
     end.
 
 -spec create_table(string() | binary(), keyschema(), integer(), integer()) -> jsonf().
