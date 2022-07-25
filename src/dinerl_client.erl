@@ -1,7 +1,5 @@
 -module(dinerl_client).
 
--author('Valentino Volonghi <valentino@adroll.com>').
-
 -include("dinerl_types.hrl").
 
 -export([api/5, api/6]).
