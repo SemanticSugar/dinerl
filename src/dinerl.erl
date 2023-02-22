@@ -1,7 +1,5 @@
 -module(dinerl).
 
--author('Valentino Volonghi <valentino@adroll.com>').
-
 -define(DINERL_DATA, dinerl_data).
 -define(ARGS_KEY, args).
 -define(NONE, <<"NONE">>).

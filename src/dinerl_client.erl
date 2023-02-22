@@ -1,7 +1,5 @@
 -module(dinerl_client).
 
--author('Valentino Volonghi <valentino@adroll.com>').
-
 -include("dinerl_types.hrl").
 
 -export([api/5, api/6]).
@@ -57,11 +55,11 @@ api(Credentials, Zone, ISODate, Name, Body, Timeout) ->
                        Zone,
                        method_name(Name),
                        ISODate,
-                       dmochijson2:encode(Body),
+                       jiffy:encode(Body),
                        Timeout)
     of
         {ok, Response} ->
-            {ok, dmochijson2:decode(Response)};
+            {ok, jiffy:decode(Response)};
         {error, Code, Reason} ->
             {error, Code, Reason}
     end.
