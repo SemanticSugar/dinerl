@@ -1,7 +1,5 @@
 -module(dynamodb).
 
--author('Valentino Volonghi <valentino@adroll.com>').
-
 -include("dinerl_types.hrl").
 
 -export([call/5, call/6]).

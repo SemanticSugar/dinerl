@@ -39,8 +39,6 @@
 
 -module(dmochijson2).
 
--author('bob@mochimedia.com').
-
 -export([encoder/1, encode/1]).
 -export([decoder/1, decode/1, decode/2]).
 
