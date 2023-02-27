@@ -11,8 +11,6 @@
 
 -module(dmochinum).
 
--author("Bob Ippolito <bob@mochimedia.com>").
-
 -export([digits/1, frexp/1, int_pow/2, int_ceil/1]).
 
 %% IEEE 754 Float exponent bias
