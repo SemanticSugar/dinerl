@@ -8,7 +8,38 @@
 -define(ALL_NEW, <<"ALL_NEW">>).
 -define(UPDATED_NEW, <<"UPDATED_NEW">>).
 
--include("dinerl_types.hrl").
+-type access_key_id() :: string().
+-type secret_access_key() :: string().
+-type zone() :: string().
+-type rfcdate() :: string().
+-type field() :: {binary(), binary() | string()}.
+-type keyschema_element() :: {binary(), [field()]}.
+-type keyschema() :: [keyschema_element()].
+-type jsonf() :: any().
+-type clientarguments() :: {{access_key_id(), secret_access_key()}, zone(), rfcdate()}.
+-type method() ::
+    batch_get_item |
+    get_item |
+    put_item |
+    delete_item |
+    update_item |
+    create_table |
+    list_tables |
+    describe_table |
+    update_table |
+    delete_table |
+    q |
+    scan |
+    query_item_20111205 |
+    query_item_20120810.
+-type result() ::
+    {ok, any()} |
+    {error, string(), string()} |
+    {error, term(), timeout | string()} |
+    {error, atom(), any()}.
+
+-export_type([access_key_id/0, clientarguments/0, jsonf/0, keyschema/0, method/0,
+              result/0, secret_access_key/0, zone/0]).
 
 -export([setup/3, setup/1, setup/0, api/1, api/2, api/3, api/4]).
 -export([create_table/4, create_table/5, delete_table/1, delete_table/2]).
