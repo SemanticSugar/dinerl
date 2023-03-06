@@ -1,13 +1,18 @@
 -module(dynamodb).
 
--include("dinerl_types.hrl").
+-type aws_datetime() :: string().
+-type endpoint() :: string().
+-type header() :: {string() | atom(), string()}.
+-type headers() :: [header()].
+
+-export_type([aws_datetime/0]).
 
 -export([call/5, call/6]).
 
 %% @todo Remove when lhttpc's specs are fixed
 -dialyzer({nowarn_function, [call/6, submit/4]}).
 
--spec endpoint(zone()) -> endpoint().
+-spec endpoint(dinerl:zone()) -> endpoint().
 endpoint("us-east-1" ++ _R) ->
     "dynamodb.us-east-1.amazonaws.com";
 endpoint("us-west-1" ++ _R) ->
@@ -21,7 +26,7 @@ endpoint("ap-southeast-1" ++ _R) ->
 endpoint("eu-west-1" ++ _R) ->
     "dynamodb.eu-west-1.amazonaws.com".
 
--spec region(zone()) -> string().
+-spec region(dinerl:zone()) -> string().
 region("us-east-1" ++ _R) ->
     "us-east-1";
 region("us-west-1" ++ _R) ->
@@ -36,12 +41,12 @@ region("eu-west-1" ++ _R) ->
     "eu-west-1".
 
 -spec call(awsv4:credentials(),
-           zone(),
+           dinerl:zone(),
            string(),
            aws_datetime(),
            iodata(),
            undefined | pos_integer()) ->
-              result().
+              dinerl:result().
 call(Credentials, Zone, Target, ISODate, Body, undefined) ->
     call(Credentials, Zone, Target, ISODate, Body, 1000);
 call(Credentials, Zone, Target, ISODate, Body, Timeout) ->
@@ -60,7 +65,7 @@ call(Credentials, Zone, Target, ISODate, Body, Timeout) ->
 call(Credentials, Zone, Target, RFCDate, Body) ->
     call(Credentials, Zone, Target, RFCDate, Body, 1000).
 
--spec submit(endpoint(), headers(), iodata(), integer()) -> result().
+-spec submit(endpoint(), headers(), iodata(), integer()) -> dinerl:result().
 submit(Host, Headers, Body, Timeout) when is_list(Host) ->
     MaxConnections = dinerl_util:get_env(max_connections),
     Opts = [{max_connections, MaxConnections}],

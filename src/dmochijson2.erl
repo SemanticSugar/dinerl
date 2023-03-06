@@ -42,6 +42,9 @@
 -export([encoder/1, encode/1]).
 -export([decoder/1, decode/1, decode/2]).
 
+%% It was the style used by mochiweb
+-elvis([{elvis_style, param_pattern_matching, #{side => left}}]).
+
 %% This is a macro to placate syntax highlighters..
 -define(Q, $\").
 -define(ADV_COL(S, N),
@@ -72,6 +75,8 @@
     json_object() |
     json_eep18_object() |
     json_iodata().
+
+-export_type([json_term/0]).
 
 -record(encoder, {handler = null, utf8 = false}).
 -record(decoder, {object_hook = null, offset = 0, line = 1, column = 1, state = null}).
@@ -138,7 +143,7 @@ json_encode(F, _State) when is_float(F) ->
     dmochinum:digits(F);
 json_encode(S, State) when is_binary(S); is_atom(S) ->
     json_encode_string(S, State);
-json_encode([{K, _} | _] = Props, State)
+json_encode(Props = [{K, _} | _], State)
     when K =/= struct andalso K =/= array andalso K =/= json ->
     json_encode_proplist(Props, State);
 json_encode({struct, Props}, State) when is_list(Props) ->
@@ -529,7 +534,9 @@ tokenize_number(B, esign, S = #decoder{offset = O}, Acc) ->
 tokenize_number(B, eint, S = #decoder{offset = O}, Acc) ->
     case B of
         <<_:O/binary, C, _/binary>> when C >= $0 andalso C =< $9 ->
-            tokenize_number(B, eint1, ?INC_COL(S), [C | Acc])
+            tokenize_number(B, eint1, ?INC_COL(S), [C | Acc]);
+        _ ->
+            exit({invalid_eint, B})
     end;
 tokenize_number(B, eint1, S = #decoder{offset = O}, Acc) ->
     case B of

@@ -1,13 +1,11 @@
 -module(dinerl_client).
 
--include("dinerl_types.hrl").
-
 -export([api/5, api/6]).
 
 %%
 %% Item related operations
 %%
--spec method_name(method()) -> string().
+-spec method_name(dinerl:method()) -> string().
 method_name(batch_get_item) ->
     "DynamoDB_20111205.BatchGetItem";
 method_name(batch_write_item) ->
@@ -44,12 +42,12 @@ method_name(scan) ->
     "DynamoDB_20111205.Scan".
 
 -spec api(awsv4:credentials(),
-          zone(),
-          aws_datetime(),
-          method(),
+          dinerl:zone(),
+          dynamodb:aws_datetime(),
+          dinerl:method(),
           any(),
           undefined | integer()) ->
-             result().
+             dinerl:result().
 api(Credentials, Zone, ISODate, Name, Body, Timeout) ->
     case dynamodb:call(Credentials,
                        Zone,
