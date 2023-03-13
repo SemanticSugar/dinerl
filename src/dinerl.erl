@@ -16,7 +16,7 @@
 -type keyschema_element() :: {binary(), [field()]}.
 -type keyschema() :: [keyschema_element()].
 -type jsonf() :: any().
--type clientarguments() :: {{access_key_id(), secret_access_key()}, zone(), rfcdate()}.
+-type clientarguments() :: {awsv4:credentials(), zone(), rfcdate()}.
 -type method() ::
     batch_get_item |
     get_item |
