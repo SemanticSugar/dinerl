@@ -1,6 +1,8 @@
 - label: 'Test Build'
   command:
     - if [ ! -z "$MERGE_BRANCH" ]; then git merge $MERGE_BRANCH -m "merging $MERGE_BRANCH"; fi
+    - rebar3 plugins upgrade rebar3_format
+    - rebar3 format --verify
     - rebar3 dialyzer || true
     - rebar3 test
   agents:
