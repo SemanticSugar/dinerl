@@ -8,7 +8,7 @@ if [ "${BUILDKITE_BRANCH}" = "main" ]; then
 cat <<EOF
 - label: "Trigger builds"
   agents:
-    queue: 'rtb'
+    queue: 'rtb-new'
   command:
     - "echo Triggering builds"
 EOF
