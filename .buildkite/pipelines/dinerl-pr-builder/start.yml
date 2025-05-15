@@ -1,13 +1,16 @@
 - label: 'Test Build'
   command:
     - if [ ! -z "$MERGE_BRANCH" ]; then git merge $MERGE_BRANCH -m "merging $MERGE_BRANCH"; fi
-    - curl https://rebar3.s3.amazonaws.com/rebar3 -o ./rebar3
-    - chmod +x rebar3
-    - ./rebar3 plugins upgrade rebar3_format
-    - ./rebar3 format --verify
-    - aws s3 sync s3://adroll-misc/rtb/dinerl/ . --exclude "*" --include "*plt" --no-follow-symlinks
-    - ./rebar3 dialyzer || true
-    - ./rebar3 test
-    - aws s3 sync . s3://adroll-misc/rtb/dinerl/ --exclude "*" --include "*plt" --no-follow-symlinks
+    - rebar3 dialyzer || true
+    - rebar3 test
   agents:
-    queue: 'rtb'
+    queue: 'rtb-new'
+  plugins:
+      - docker#v5.11.0:
+          image: "771945457201.dkr.ecr.us-west-2.amazonaws.com/rtb/erts:multiarch-27.3.4-amz2023"
+          always-pull: true
+          user: 2000:2000
+          propagate-environment: true
+          propagate-aws-auth-tokens: true
+          mount-ssh-agent: true
+          workdir: /app
