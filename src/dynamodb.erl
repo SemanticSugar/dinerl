@@ -9,9 +9,6 @@
 
 -export([call/5, call/6]).
 
-%% @todo Remove when lhttpc's specs are fixed
--dialyzer({nowarn_function, [call/6, submit/4]}).
-
 -spec endpoint(dinerl:zone()) -> endpoint().
 endpoint("us-east-1" ++ _R) ->
     "dynamodb.us-east-1.amazonaws.com";
@@ -67,13 +64,16 @@ call(Credentials, Zone, Target, RFCDate, Body) ->
 
 -spec submit(endpoint(), headers(), iodata(), integer()) -> dinerl:result().
 submit(Host, Headers, Body, Timeout) when is_list(Host) ->
-    MaxConnections = dinerl_util:get_env(max_connections),
-    Opts = [{max_connections, MaxConnections}],
     Endpoint = "http://" ++ Host ++ "/",
     dinerl_util:increment([dinerl, dynamodb, call, {endpoint, list_to_atom(Host)}]),
-    F = fun() -> lhttpc:request(Endpoint, "POST", Headers, Body, Timeout, Opts) end,
+    F = fun() ->
+           hackney:post(Endpoint,
+                        Headers,
+                        Body,
+                        [{pool, dinerl_pool}, with_body, {recv_timeout, Timeout}])
+        end,
     case dinerl_util:time_call([dinerl, dynamodb, call, time, list_to_atom(Host)], F) of
-        {ok, {{200, _}, _Headers, Response}} ->
+        {ok, 200, _Headers, Response} ->
             dinerl_util:increment([dinerl,
                                    dynamodb,
                                    call,
@@ -81,7 +81,7 @@ submit(Host, Headers, Body, Timeout) when is_list(Host) ->
                                    {endpoint, list_to_atom(Host)},
                                    {result, ok}]),
             {ok, Response};
-        {ok, {{400, Code}, _Headers, ErrorString}} ->
+        {ok, 400 = Code, _Headers, ErrorString} ->
             dinerl_util:increment([dinerl,
                                    dynamodb,
                                    call,
@@ -89,7 +89,7 @@ submit(Host, Headers, Body, Timeout) when is_list(Host) ->
                                    {endpoint, list_to_atom(Host)},
                                    {result, '400'}]),
             {error, Code, ErrorString};
-        {ok, {{413, Code}, _Headers, ErrorString}} ->
+        {ok, 413 = Code, _Headers, ErrorString} ->
             dinerl_util:increment([dinerl,
                                    dynamodb,
                                    call,
@@ -97,7 +97,7 @@ submit(Host, Headers, Body, Timeout) when is_list(Host) ->
                                    {endpoint, list_to_atom(Host)},
                                    {result, '413'}]),
             {error, Code, ErrorString};
-        {ok, {{500, Code}, _Headers, ErrorString}} ->
+        {ok, 500 = Code, _Headers, ErrorString} ->
             dinerl_util:increment([dinerl,
                                    dynamodb,
                                    call,

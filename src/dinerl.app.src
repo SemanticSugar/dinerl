@@ -9,5 +9,6 @@
     {histogram_stat_callback, {dinerl_util, noop}},
     {max_connections, 10000}]},
   {licenses, ["MIT"]},
+  {mod, {dinerl, []}},
   {applications,
-   [kernel, stdlib, crypto, inets, asn1, public_key, ssl, xmerl, erliam, lhttpc]}]}.
+   [kernel, stdlib, crypto, inets, asn1, public_key, ssl, xmerl, erliam, hackney]}]}.
