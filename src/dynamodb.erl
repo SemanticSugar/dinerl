@@ -59,7 +59,10 @@ call(Credentials, Zone, Target, ISODate, Body, Timeout) ->
                                    host => Host,
                                    region => region(Zone)},
                                  Body)],
-    submit(Host, [{<<"content-type">>, <<"application/x-amz-json-1.0">>} | Headers], Body, Timeout).
+    submit(Host,
+           [{<<"content-type">>, <<"application/x-amz-json-1.0">>} | Headers],
+           Body,
+           Timeout).
 
 call(Credentials, Zone, Target, RFCDate, Body) ->
     call(Credentials, Zone, Target, RFCDate, Body, 1000).
