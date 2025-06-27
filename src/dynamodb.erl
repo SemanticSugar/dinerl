@@ -49,14 +49,16 @@ call(Credentials, Zone, Target, ISODate, Body, undefined) ->
 call(Credentials, Zone, Target, ISODate, Body, Timeout) ->
     Host = endpoint(Zone),
     Headers =
-        awsv4:headers(Credentials,
-                      #{service => "dynamodb",
-                        target_api => Target,
-                        method => "POST",
-                        aws_date => ISODate,
-                        host => Host,
-                        region => region(Zone)},
-                      Body),
+        [{Key, iolist_to_binary(Values)}
+         || {Key, Values}
+                <- awsv4:headers(Credentials,
+                                 #{service => "dynamodb",
+                                   target_api => Target,
+                                   method => "POST",
+                                   aws_date => ISODate,
+                                   host => Host,
+                                   region => region(Zone)},
+                                 Body)],
     submit(Host, [{"content-type", "application/x-amz-json-1.0"} | Headers], Body, Timeout).
 
 call(Credentials, Zone, Target, RFCDate, Body) ->
