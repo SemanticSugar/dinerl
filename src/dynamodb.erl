@@ -69,12 +69,8 @@ call(Credentials, Zone, Target, RFCDate, Body) ->
 submit(Host, Headers, Body, Timeout) when is_list(Host) ->
     Endpoint = "http://" ++ Host ++ "/",
     dinerl_util:increment([dinerl, dynamodb, call, {endpoint, list_to_atom(Host)}]),
-    F = fun() ->
-           hackney:post(Endpoint,
-                        Headers,
-                        Body,
-                        [{pool, dinerl_pool}, with_body, {recv_timeout, Timeout}])
-        end,
+    Worker = ehttpc_pool:pick_worker(dinerl_pool),
+    F = fun() -> ehttpc:request(Worker, post, {Endpoint, Headers, Body}, Timeout) end,
     case dinerl_util:time_call([dinerl, dynamodb, call, time, list_to_atom(Host)], F) of
         {ok, 200, _Headers, Response} ->
             dinerl_util:increment([dinerl,

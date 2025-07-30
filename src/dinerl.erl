@@ -69,7 +69,7 @@ start(_, _) ->
 
 -spec stop(any()) -> ok.
 stop(_) ->
-    hackney_pool:stop_pool(dinerl_pool),
+    ehttpc_sup:stop_pool(dinerl_pool),
     ok.
 
 -spec setup(access_key_id(), secret_access_key(), zone()) -> {ok, clientarguments()}.
@@ -480,5 +480,5 @@ value_and_action({exists, V}) ->
     {<<"Exists">>, V}.
 
 start_pool() ->
-    MaxConnections = application:get_env(?MODULE, max_connections, 100),
-    hackney_pool:start_pool(hackney_pool, [{max_connections, MaxConnections}]).
+    PoolSize = application:get_env(?MODULE, pool_size, 100),
+    ehttpc_sup:start_pool(dinerl_pool, [{pool_size, PoolSize}]).
