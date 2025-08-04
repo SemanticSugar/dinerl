@@ -487,9 +487,9 @@ start_pool() ->
     PoolSize = application:get_env(?MODULE, pool_size, 100),
     lists:foreach(fun(Region) ->
                      PoolName = dinerl_util:pool_name(Region),
-                     Host = "https://" ++ dynamodb:endpoint(Region),
+                     Endpoint = dynamodb:endpoint(Region),
                      ehttpc_sup:start_pool(PoolName,
-                                           [{host, Host},
+                                           [{host, Endpoint},
                                             {port, 443},
                                             {pool_size, PoolSize},
                                             {gun_opts, [{tls_opts, [{verify, verify_none}]}]}])
