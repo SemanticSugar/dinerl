@@ -3,7 +3,8 @@
 %% Because noop/2 is used as a stat_callback
 -hank([{unnecessary_function_arguments, [noop]}]).
 
--export([get_env/1, noop/2, time_call/2, time_call/3, increment/1, increment/2]).
+-export([get_env/1, noop/2, time_call/2, time_call/3, increment/1, increment/2,
+         pool_name/1, regions/0]).
 
 %%%===================================================================
 %%% API
@@ -58,6 +59,18 @@ get_env(Key) ->
         undefined ->
             exit({undefined_configuration, Key})
     end.
+
+pool_name("us-east-1" ++ _R) ->
+    'dinerl_pool_us-east-1';
+pool_name("us-west-2" ++ _R) ->
+    'dinerl_pool_us-west-2';
+pool_name("ap-southeast-1" ++ _R) ->
+    'dinerl_pool_ap-southeast-1';
+pool_name("eu-west-1" ++ _R) ->
+    'dinerl_pool_eu-west-1'.
+
+regions() ->
+    ["us-east-1", "us-west-2", "ap-southeast-1", "eu-west-1"].
 
 %%%===================================================================
 %%% Internal Functions

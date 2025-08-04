@@ -69,7 +69,11 @@ start(_, _) ->
 
 -spec stop(any()) -> ok.
 stop(_) ->
-    ehttpc_sup:stop_pool(dinerl_pool),
+    lists:foreach(fun(Region) ->
+                     PoolName = dinerl_util:pool_name(Region),
+                     ok = ehttpc_sup:stop_pool(PoolName)
+                  end,
+                  dinerl_util:regions()),
     ok.
 
 -spec setup(access_key_id(), secret_access_key(), zone()) -> {ok, clientarguments()}.
@@ -481,4 +485,10 @@ value_and_action({exists, V}) ->
 
 start_pool() ->
     PoolSize = application:get_env(?MODULE, pool_size, 100),
-    ehttpc_sup:start_pool(dinerl_pool, [{pool_size, PoolSize}]).
+    lists:foreach(fun(Region) ->
+                     PoolName = dinerl_util:pool_name(Region),
+                     Host = "https://" ++ dynamodb:endpoint(Region),
+                     ehttpc_sup:start_pool(PoolName,
+                                           [{host, Host}, {port, 443}, {pool_size, PoolSize}])
+                  end,
+                  dinerl_util:regions()).
