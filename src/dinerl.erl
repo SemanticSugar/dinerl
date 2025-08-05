@@ -489,9 +489,6 @@ start_pool() ->
                      PoolName = dinerl_util:pool_name(Region),
                      Endpoint = dynamodb:endpoint(Region),
                      ehttpc_sup:start_pool(PoolName,
-                                           [{host, Endpoint},
-                                            {port, 443},
-                                            {pool_size, PoolSize},
-                                            {gun_opts, [{transport, tls}]}])
+                                           [{host, Endpoint}, {port, 443}, {pool_size, PoolSize}])
                   end,
                   dinerl_util:regions()).
