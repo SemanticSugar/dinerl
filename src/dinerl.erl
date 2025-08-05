@@ -492,6 +492,6 @@ start_pool() ->
                                            [{host, Endpoint},
                                             {port, 443},
                                             {pool_size, PoolSize},
-                                            {gun_opts, [{tls_opts, [{verify, verify_none}]}]}])
+                                            {gun_opts, [{transport, tls}]}])
                   end,
                   dinerl_util:regions()).
