@@ -64,7 +64,7 @@ submit(Host, Headers, Body, Timeout, Zone) when is_list(Host) ->
     dinerl_util:increment([dinerl, dynamodb, call, {endpoint, list_to_atom(Host)}]),
     PoolName = dinerl_util:pool_name(Zone),
     Worker = ehttpc_pool:pick_worker(PoolName),
-    F = fun() -> ehttpc:request(Worker, post, {"", Headers, Body}, Timeout) end,
+    F = fun() -> ehttpc:request(Worker, post, {"/", Headers, Body}, Timeout) end,
     case dinerl_util:time_call([dinerl, dynamodb, call, time, list_to_atom(Host)], F) of
         {ok, 200, _Headers, Response} ->
             dinerl_util:increment([dinerl,
