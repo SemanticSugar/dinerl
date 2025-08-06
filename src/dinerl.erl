@@ -494,6 +494,7 @@ start_pool() ->
                                             {port, 443},
                                             {pool_size, PoolSize},
                                             {enable_pipelining, true},
+                                            {max_inactive, 200},
                                             {gun_opts, GunOpts}])
                   end,
                   dinerl_util:regions()).
