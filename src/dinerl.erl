@@ -485,6 +485,7 @@ value_and_action({exists, V}) ->
 
 start_pool() ->
     PoolSize = application:get_env(?MODULE, pool_size, 100),
+    GunOpts = application:get_env(?MODULE, gun_opts, []),
     lists:foreach(fun(Region) ->
                      PoolName = dinerl_util:pool_name(Region),
                      Endpoint = dynamodb:endpoint(Region),
@@ -492,6 +493,7 @@ start_pool() ->
                                            [{host, Endpoint},
                                             {port, 443},
                                             {pool_size, PoolSize},
-                                            {enable_pipelining, true}])
+                                            {enable_pipelining, true},
+                                            {gun_opts, GunOpts}])
                   end,
                   dinerl_util:regions()).
