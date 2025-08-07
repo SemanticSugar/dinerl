@@ -7,7 +7,7 @@
   {env,
    [{increment_stat_callback, {dinerl_util, noop}},
     {histogram_stat_callback, {dinerl_util, noop}},
-    {pool_size, 10000}]},
+    {pool_size, 100}]},
   {licenses, ["MIT"]},
   {mod, {dinerl, []}},
   {applications,
