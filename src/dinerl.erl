@@ -1,5 +1,7 @@
 -module(dinerl).
 
+-behaviour(application).
+
 -define(DINERL_DATA, dinerl_data).
 -define(ARGS_KEY, args).
 -define(NONE, <<"NONE">>).
@@ -41,6 +43,7 @@
 -export_type([access_key_id/0, clientarguments/0, jsonf/0, keyschema/0, method/0,
               result/0, secret_access_key/0, zone/0]).
 
+-export([start/2, stop/1]).
 -export([setup/3, setup/1, setup/0, api/1, api/2, api/3, api/4]).
 -export([create_table/4, create_table/5, delete_table/1, delete_table/2]).
 -export([describe_table/1, describe_table/2, update_table/3, update_table/4]).
@@ -58,6 +61,20 @@
 -export([query/2, query/3, query/4]).
 -export([update_data/1]).
 -export([batch_write_item/3]).
+
+-spec start(normal | {takeover, node()} | {failover, node()}, any()) -> {ok, pid()}.
+start(_, _) ->
+    start_pool(),
+    dinerl_sup:start_link().
+
+-spec stop(any()) -> ok.
+stop(_) ->
+    lists:foreach(fun(Region) ->
+                     PoolName = dinerl_util:pool_name(Region),
+                     ok = ehttpc_sup:stop_pool(PoolName)
+                  end,
+                  dinerl_util:regions()),
+    ok.
 
 -spec setup(access_key_id(), secret_access_key(), zone()) -> {ok, clientarguments()}.
 setup(AccessKeyId, SecretAccessKey, Zone) ->
@@ -465,3 +482,17 @@ value_and_action({action, delete}) ->
     {<<"Action">>, <<"DELETE">>};
 value_and_action({exists, V}) ->
     {<<"Exists">>, V}.
+
+start_pool() ->
+    PoolSize = application:get_env(?MODULE, pool_size, 100),
+    GunOpts = application:get_env(?MODULE, gun_opts, []),
+    lists:foreach(fun(Region) ->
+                     PoolName = dinerl_util:pool_name(Region),
+                     Endpoint = dynamodb:endpoint(Region),
+                     ehttpc_sup:start_pool(PoolName,
+                                           [{host, Endpoint},
+                                            {port, 443},
+                                            {pool_size, PoolSize},
+                                            {gun_opts, GunOpts}])
+                  end,
+                  dinerl_util:regions()).
