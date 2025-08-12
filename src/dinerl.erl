@@ -34,9 +34,7 @@
     scan |
     query_item_20111205 |
     query_item_20120810.
--type result() ::
-    {ok, any()} |
-    {error, atom(), any()}.
+-type result() :: {ok, any()} | {error, atom(), any()}.
 
 -export_type([access_key_id/0, clientarguments/0, jsonf/0, keyschema/0, method/0,
               result/0, secret_access_key/0, zone/0]).
