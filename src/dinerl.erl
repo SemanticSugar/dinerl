@@ -36,8 +36,6 @@
     query_item_20120810.
 -type result() ::
     {ok, any()} |
-    {error, string(), string()} |
-    {error, term(), timeout | string()} |
     {error, atom(), any()}.
 
 -export_type([access_key_id/0, clientarguments/0, jsonf/0, keyschema/0, method/0,
