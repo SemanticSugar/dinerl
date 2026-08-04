@@ -118,18 +118,18 @@ submit(Host, Headers, Body, Timeout, Zone) when is_list(Host) ->
             {error, response, Other}
     end.
 
-    maybe_recycle_gun_client(Worker, connect_timeout) when is_pid(Worker) ->
-        try
-            case ehttpc:get_state(Worker) of
-                #{client := Client} when is_pid(Client) ->
-                    dinerl_util:increment([dinerl, dynamodb, gun_recycle,
-                                           {reason, connect_timeout}]),
-                    exit(Client, kill);
-                _ ->
-                    ok
-            end
-        catch
-            _:_ -> ok
-        end;
+maybe_recycle_gun_client(Worker, connect_timeout) ->
+    try
+        case ehttpc:get_state(Worker) of
+            #{client := Client, gun_state := down} when is_pid(Client) ->
+                dinerl_util:increment([dinerl, dynamodb, gun_recycle, {reason, connect_timeout}]),
+                exit(Client, kill);
+            _ ->
+                ok
+        end
+    catch
+        _:_ ->
+            ok
+    end;
 maybe_recycle_gun_client(_Worker, _Reason) ->
     ok.
