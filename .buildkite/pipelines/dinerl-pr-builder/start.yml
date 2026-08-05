@@ -15,5 +15,5 @@
           user: 2000:2000
           propagate-environment: true
           propagate-aws-auth-tokens: true
-          mount-ssh-agent: true
+          mount-ssh-agent: /home/buildkite-agent
           workdir: /app
